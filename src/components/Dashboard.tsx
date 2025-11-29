@@ -43,7 +43,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="tooltip-header">Increment Methods</div>
         {Array.from({ length: committedYears - 1 }, (_, i) => i + 2).map((year) => {
           const method = lease.incrementMethods[year];
-          const overrideAmount = lease.overrideAmounts[year];
 
           return (
             <div key={year} className="tooltip-row">
