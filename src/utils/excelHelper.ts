@@ -1,4 +1,4 @@
-import { Lease } from '../types/Lease';
+import { PropertyLease } from '../types/Lease';
 
 export interface PaymentRow {
   payment: number;
@@ -21,7 +21,7 @@ export const calculateXNPV = (rate: number, values: number[], dates: Date[]): nu
   return xnpv;
 };
 
-export const generatePaymentRows = (lease: Lease): PaymentRow[] => {
+export const generatePaymentRows = (lease: PropertyLease): PaymentRow[] => {
   const rows: PaymentRow[] = [];
 
   const commencementDate = new Date(lease.commencementDate);
@@ -32,7 +32,7 @@ export const generatePaymentRows = (lease: Lease): PaymentRow[] => {
   const finalDate = new Date(expiryDate);
   finalDate.setFullYear(finalDate.getFullYear() + optionsYears);
 
-  const originalMonthlyPayment = Math.round((parseFloat(lease.originalAnnualRent) / 12) * 100) / 100;
+  const originalMonthlyPayment = Math.round((parseFloat(lease.annualRent) / 12) * 100) / 100;
   console.log(originalMonthlyPayment);
   let currentAmount = originalMonthlyPayment;
   let currentDate = new Date(commencementDate);
