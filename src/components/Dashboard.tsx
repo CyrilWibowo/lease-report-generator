@@ -5,7 +5,7 @@ import { Lease, PropertyLease, MotorVehicleLease } from '../types/Lease';
 import { generateExcelFromLeases } from '../utils/excelGenerator';
 import EditLeaseModal from './EditLeaseModal';
 import './Dashboard.css';
-import { formatCurrency, formatDate } from '../utils/helper';
+import { formatCurrency, formatDate, getYearDiff } from '../utils/helper';
 
 interface DashboardProps {
   propertyLeases: PropertyLease[];
@@ -31,7 +31,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       if (propertyLease.commencementDate && propertyLease.expiryDate) {
         const start = new Date(propertyLease.commencementDate);
         const end = new Date(propertyLease.expiryDate);
-        const yearsDiff = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
+        const yearsDiff = getYearDiff(start, end);
         const optionsYears = parseInt(propertyLease.options) || 0;
         const total = Math.floor(yearsDiff + optionsYears);
         return total > 0 ? total : 0;
@@ -41,7 +41,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       if (mvLease.deliveryDate && mvLease.expiryDate) {
         const start = new Date(mvLease.deliveryDate);
         const end = new Date(mvLease.expiryDate);
-        const yearsDiff = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
+        const yearsDiff = getYearDiff(start, end);
         return Math.floor(yearsDiff) > 0 ? Math.floor(yearsDiff) : 0;
       }
     }
