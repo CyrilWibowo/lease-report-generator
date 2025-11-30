@@ -1,0 +1,476 @@
+// components/EditLeaseModal.tsx
+import React, { useState, useEffect } from 'react';
+import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { Lease, PropertyLease, MotorVehicleLease } from '../types/Lease';
+import './EditLeaseModal.css';
+
+interface EditLeaseModalProps {
+  lease: Lease;
+  onClose: () => void;
+  onSave: (lease: Lease) => void;
+  onDelete: (leaseId: string) => void;
+}
+
+const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave, onDelete }) => {
+  const [editedLease, setEditedLease] = useState<Lease>(lease);
+  const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
+  const [committedYears, setCommittedYears] = useState(0);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  useEffect(() => {
+    calculateCommittedYears();
+  }, [editedLease]);
+
+  const calculateCommittedYears = () => {
+    if (editedLease.type === 'Property') {
+      const propertyLease = editedLease as PropertyLease;
+      if (propertyLease.commencementDate && propertyLease.expiryDate) {
+        const start = new Date(propertyLease.commencementDate);
+        const end = new Date(propertyLease.expiryDate);
+        const yearsDiff = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
+        const optionsYears = parseInt(propertyLease.options) || 0;
+        const total = Math.floor(yearsDiff + optionsYears);
+        setCommittedYears(total > 0 ? total : 0);
+      } else {
+        setCommittedYears(0);
+      }
+    } else {
+      const mvLease = editedLease as MotorVehicleLease;
+      if (mvLease.deliveryDate && mvLease.expiryDate) {
+        const start = new Date(mvLease.deliveryDate);
+        const end = new Date(mvLease.expiryDate);
+        const yearsDiff = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
+        setCommittedYears(Math.floor(yearsDiff) > 0 ? Math.floor(yearsDiff) : 0);
+      } else {
+        setCommittedYears(0);
+      }
+    }
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setEditedLease({ ...editedLease, [field]: value } as Lease);
+    if (errors[field]) {
+      setErrors({ ...errors, [field]: false });
+    }
+  };
+
+  const handleIncrementMethodChange = (year: number, value: string) => {
+    const updatedMethods = { ...editedLease.incrementMethods, [year]: value };
+    const updatedLease = { ...editedLease, incrementMethods: updatedMethods };
+
+    if (value !== 'Market') {
+      const updatedOverrides = { ...editedLease.overrideAmounts };
+      delete updatedOverrides[year];
+      updatedLease.overrideAmounts = updatedOverrides;
+    }
+
+    setEditedLease(updatedLease as Lease);
+  };
+
+  const handleOverrideAmountChange = (year: number, value: string) => {
+    const updatedOverrides = { ...editedLease.overrideAmounts, [year]: value };
+    setEditedLease({ ...editedLease, overrideAmounts: updatedOverrides } as Lease);
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: { [key: string]: boolean } = {};
+    let isValid = true;
+
+    // Common validations
+    if (!editedLease.lessor?.trim()) {
+      newErrors.lessor = true;
+      isValid = false;
+    }
+    if (!editedLease.annualRent.trim()) {
+      newErrors.annualRent = true;
+      isValid = false;
+    }
+    if (!editedLease.rbaCpiRate.trim()) {
+      newErrors.rbaCpiRate = true;
+      isValid = false;
+    }
+    if (!editedLease.borrowingRate.trim()) {
+      newErrors.borrowingRate = true;
+      isValid = false;
+    }
+
+    if (editedLease.type === 'Property') {
+      const propertyLease = editedLease as PropertyLease;
+      if (!propertyLease.propertyAddress?.trim()) {
+        newErrors.propertyAddress = true;
+        isValid = false;
+      }
+      if (!propertyLease.commencementDate) {
+        newErrors.commencementDate = true;
+        isValid = false;
+      }
+      if (!propertyLease.expiryDate) {
+        newErrors.expiryDate = true;
+        isValid = false;
+      }
+      if (!propertyLease.options.trim()) {
+        newErrors.options = true;
+        isValid = false;
+      }
+      if (!propertyLease.fixedIncrementRate.trim()) {
+        newErrors.fixedIncrementRate = true;
+        isValid = false;
+      }
+    } else {
+      const mvLease = editedLease as MotorVehicleLease;
+      if (!mvLease.entityName?.trim()) {
+        newErrors.entityName = true;
+        isValid = false;
+      }
+      if (!mvLease.description?.trim()) {
+        newErrors.description = true;
+        isValid = false;
+      }
+      if (!mvLease.vinSerialNo?.trim()) {
+        newErrors.vinSerialNo = true;
+        isValid = false;
+      }
+      if (!mvLease.regoNo?.trim()) {
+        newErrors.regoNo = true;
+        isValid = false;
+      }
+      if (!mvLease.deliveryDate) {
+        newErrors.deliveryDate = true;
+        isValid = false;
+      }
+      if (!mvLease.expiryDate) {
+        newErrors.expiryDate = true;
+        isValid = false;
+      }
+    }
+
+    if (committedYears > 1) {
+      for (let year = 2; year <= committedYears; year++) {
+        if (!editedLease.incrementMethods[year]) {
+          newErrors[`incrementMethod_${year}`] = true;
+          isValid = false;
+        }
+        if (editedLease.incrementMethods[year] === 'Market' && !editedLease.overrideAmounts[year]?.trim()) {
+          newErrors[`overrideAmount_${year}`] = true;
+          isValid = false;
+        }
+      }
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = () => {
+    if (validateForm()) {
+      onSave(editedLease);
+      onClose();
+    } else {
+      alert('Please fill in all required fields');
+    }
+  };
+
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = () => {
+    onDelete(lease.id);
+    setShowDeleteConfirm(false);
+    onClose();
+  };
+
+  const isPropertyLease = editedLease.type === 'Property';
+
+  return (
+    <>
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2 className="modal-title">Edit {editedLease.type} Lease</h2>
+            <button className="close-button" onClick={onClose}>
+              <CloseIcon />
+            </button>
+          </div>
+
+          <div className="form-grid">
+            {/* Lessor - Common field */}
+            <div className="form-group">
+              <label className="form-label">Lessor *</label>
+              {errors.lessor && <span className="error-text">This field is required</span>}
+              <input
+                type="text"
+                className={errors.lessor ? 'form-input-error' : 'form-input'}
+                value={editedLease.lessor}
+                onChange={(e) => handleInputChange('lessor', e.target.value)}
+                placeholder="Enter lessor"
+              />
+            </div>
+
+            {/* Property Lease Fields */}
+            {isPropertyLease && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">Property Address *</label>
+                  {errors.propertyAddress && <span className="error-text">This field is required</span>}
+                  <input
+                    type="text"
+                    className={errors.propertyAddress ? 'form-input-error' : 'form-input'}
+                    value={(editedLease as PropertyLease).propertyAddress}
+                    onChange={(e) => handleInputChange('propertyAddress', e.target.value)}
+                    placeholder="Enter property address"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Commencement Date *</label>
+                  {errors.commencementDate && <span className="error-text">This field is required</span>}
+                  <input
+                    type="date"
+                    className={errors.commencementDate ? 'form-input-error' : 'form-input'}
+                    value={(editedLease as PropertyLease).commencementDate}
+                    onChange={(e) => handleInputChange('commencementDate', e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Expiry Date *</label>
+                  {errors.expiryDate && <span className="error-text">This field is required</span>}
+                  <input
+                    type="date"
+                    className={errors.expiryDate ? 'form-input-error' : 'form-input'}
+                    value={(editedLease as PropertyLease).expiryDate}
+                    onChange={(e) => handleInputChange('expiryDate', e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Options (Years) *</label>
+                  {errors.options && <span className="error-text">This field is required</span>}
+                  <input
+                    type="number"
+                    className={errors.options ? 'form-input-error' : 'form-input'}
+                    value={(editedLease as PropertyLease).options}
+                    onChange={(e) => handleInputChange('options', e.target.value)}
+                    placeholder="0"
+                    min="0"
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Motor Vehicle Lease Fields */}
+            {!isPropertyLease && (
+              <>
+                <div className="form-group">
+                  <label className="form-label">Entity Name *</label>
+                  {errors.entityName && <span className="error-text">This field is required</span>}
+                  <input
+                    type="text"
+                    className={errors.entityName ? 'form-input-error' : 'form-input'}
+                    value={(editedLease as MotorVehicleLease).entityName}
+                    onChange={(e) => handleInputChange('entityName', e.target.value)}
+                    placeholder="Enter entity name"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Description *</label>
+                  {errors.description && <span className="error-text">This field is required</span>}
+                  <input
+                    type="text"
+                    className={errors.description ? 'form-input-error' : 'form-input'}
+                    value={(editedLease as MotorVehicleLease).description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    placeholder="Enter description"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">VIN/Serial No. *</label>
+                  {errors.vinSerialNo && <span className="error-text">This field is required</span>}
+                  <input
+                    type="text"
+                    className={errors.vinSerialNo ? 'form-input-error' : 'form-input'}
+                    value={(editedLease as MotorVehicleLease).vinSerialNo}
+                    onChange={(e) => handleInputChange('vinSerialNo', e.target.value)}
+                    placeholder="Enter VIN/Serial No."
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Rego No. *</label>
+                  {errors.regoNo && <span className="error-text">This field is required</span>}
+                  <input
+                    type="text"
+                    className={errors.regoNo ? 'form-input-error' : 'form-input'}
+                    value={(editedLease as MotorVehicleLease).regoNo}
+                    onChange={(e) => handleInputChange('regoNo', e.target.value)}
+                    placeholder="Enter Rego No."
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Delivery Date *</label>
+                  {errors.deliveryDate && <span className="error-text">This field is required</span>}
+                  <input
+                    type="date"
+                    className={errors.deliveryDate ? 'form-input-error' : 'form-input'}
+                    value={(editedLease as MotorVehicleLease).deliveryDate}
+                    onChange={(e) => handleInputChange('deliveryDate', e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Expiry Date *</label>
+                  {errors.expiryDate && <span className="error-text">This field is required</span>}
+                  <input
+                    type="date"
+                    className={errors.expiryDate ? 'form-input-error' : 'form-input'}
+                    value={(editedLease as MotorVehicleLease).expiryDate}
+                    onChange={(e) => handleInputChange('expiryDate', e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Annual Rent - Common field */}
+            <div className="form-group">
+              <label className="form-label">Annual Rent *</label>
+              {errors.annualRent && <span className="error-text">This field is required</span>}
+              <input
+                type="number"
+                className={errors.annualRent ? 'form-input-error' : 'form-input'}
+                value={editedLease.annualRent}
+                onChange={(e) => handleInputChange('annualRent', e.target.value)}
+                placeholder="0.00"
+                step="0.01"
+              />
+            </div>
+
+            {/* RBA CPI Rate - Common field */}
+            <div className="form-group">
+              <label className="form-label">RBA CPI Rate (%) *</label>
+              {errors.rbaCpiRate && <span className="error-text">This field is required</span>}
+              <input
+                type="number"
+                className={errors.rbaCpiRate ? 'form-input-error' : 'form-input'}
+                value={editedLease.rbaCpiRate}
+                onChange={(e) => handleInputChange('rbaCpiRate', e.target.value)}
+                placeholder="0.00"
+                step="0.01"
+              />
+            </div>
+
+            {/* Borrowing Rate - Common field */}
+            <div className="form-group">
+              <label className="form-label">Borrowing Rate (%) *</label>
+              {errors.borrowingRate && <span className="error-text">This field is required</span>}
+              <input
+                type="number"
+                className={errors.borrowingRate ? 'form-input-error' : 'form-input'}
+                value={editedLease.borrowingRate}
+                onChange={(e) => handleInputChange('borrowingRate', e.target.value)}
+                placeholder="0.00"
+                step="0.01"
+              />
+            </div>
+
+            {/* Fixed Increment Rate - Property only */}
+            {isPropertyLease && (
+              <div className="form-group">
+                <label className="form-label">Fixed Increment Rate (%) *</label>
+                {errors.fixedIncrementRate && <span className="error-text">This field is required</span>}
+                <input
+                  type="number"
+                  className={errors.fixedIncrementRate ? 'form-input-error' : 'form-input'}
+                  value={(editedLease as PropertyLease).fixedIncrementRate}
+                  onChange={(e) => handleInputChange('fixedIncrementRate', e.target.value)}
+                  placeholder="0.00"
+                  step="0.01"
+                />
+              </div>
+            )}
+          </div>
+
+          {committedYears > 1 && (
+            <div className="increment-section">
+              <h4 className="increment-title">Increment Methods (Committed Years: {committedYears})</h4>
+              <div className="increment-grid">
+                {Array.from({ length: committedYears - 1 }, (_, i) => i + 2).map((year) => (
+                  <div key={year} className="increment-group">
+                    <div className="form-group">
+                      <label className="form-label">Year {year}</label>
+                      <select
+                        value={editedLease.incrementMethods[year] || ''}
+                        onChange={(e) => handleIncrementMethodChange(year, e.target.value)}
+                        className={errors[`incrementMethod_${year}`] ? 'form-input-error' : 'form-input'}
+                      >
+                        <option value="">Select method...</option>
+                        {isPropertyLease && <option value="Fixed">Fix Rate</option>}
+                        <option value="Market">Market/Override</option>
+                        <option value="CPI">CPI</option>
+                      </select>
+                      {errors[`incrementMethod_${year}`] && (
+                        <span className="error-text">This field is required</span>
+                      )}
+                    </div>
+
+                    {editedLease.incrementMethods[year] === 'Market' && (
+                      <div className="form-group">
+                        <label className="form-label">Override Amount *</label>
+                        {errors[`overrideAmount_${year}`] && (
+                          <span className="error-text">Override amount is required</span>
+                        )}
+                        <input
+                          type="number"
+                          className={errors[`overrideAmount_${year}`] ? 'form-input-error' : 'form-input'}
+                          value={editedLease.overrideAmounts[year] || ''}
+                          onChange={(e) => handleOverrideAmountChange(year, e.target.value)}
+                          placeholder="Enter override amount"
+                          step="0.01"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="modal-actions">
+            <button className="delete-button" onClick={handleDelete}>
+              <DeleteIcon /> Delete Lease
+            </button>
+            <div className="button-group">
+              <button className="cancel-button" onClick={onClose}>Cancel</button>
+              <button className="save-button" onClick={handleSubmit}>Save Changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {showDeleteConfirm && (
+        <div className="confirm-overlay" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <h3 className="confirm-title">Delete Lease?</h3>
+            <p className="confirm-text">
+              Are you sure you want to delete this lease? This action cannot be undone.
+            </p>
+            <div className="confirm-actions">
+              <button className="confirm-cancel-button" onClick={() => setShowDeleteConfirm(false)}>
+                Cancel
+              </button>
+              <button className="confirm-delete-button" onClick={confirmDelete}>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default EditLeaseModal;
