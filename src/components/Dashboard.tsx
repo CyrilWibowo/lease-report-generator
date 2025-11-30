@@ -5,7 +5,7 @@ import { Lease, PropertyLease, MotorVehicleLease } from '../types/Lease';
 import { generateExcelFromLeases } from '../utils/excelGenerator';
 import EditLeaseModal from './EditLeaseModal';
 import './Dashboard.css';
-import { formatCurrency } from '../utils/helper';
+import { formatCurrency, formatDate } from '../utils/helper';
 
 interface DashboardProps {
   propertyLeases: PropertyLease[];
@@ -94,8 +94,8 @@ const Dashboard: React.FC<DashboardProps> = ({
         <tr key={i}>
           <td>{lease ? lease.lessor : ''}</td>
           <td>{lease ? lease.propertyAddress : ''}</td>
-          <td>{lease ? lease.commencementDate : ''}</td>
-          <td>{lease ? lease.expiryDate : ''}</td>
+          <td>{lease ? formatDate(lease.commencementDate) : ''}</td>
+          <td>{lease ? formatDate(lease.expiryDate) : ''}</td>
           <td>{lease ? `${lease.options} years` : ''}</td>
           <td
             className={lease ? 'committed-years-cell' : ''}
