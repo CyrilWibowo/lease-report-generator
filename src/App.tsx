@@ -1,5 +1,6 @@
+// App.tsx
 import React, { useState, useEffect } from 'react';
-import { Lease } from './types/Lease';
+import { Lease, PropertyLease, MotorVehicleLease } from './types/Lease';
 import Dashboard from './components/Dashboard';
 import AddLeaseModal from './components/AddLeaseModal';
 import rimexLogo from './assets/rimexLogo.png';
@@ -25,8 +26,18 @@ function App() {
     setIsModalOpen(false);
   };
 
-  const propertyLeases = leases.filter(lease => lease.type === 'Property');
-  const motorVehicleLeases = leases.filter(lease => lease.type === 'Motor Vehicle');
+  const handleUpdateLease = (updatedLease: Lease) => {
+    setLeases(leases.map(lease =>
+      lease.id === updatedLease.id ? updatedLease : lease
+    ));
+  };
+
+  const handleDeleteLease = (leaseId: string) => {
+    setLeases(leases.filter(lease => lease.id !== leaseId));
+  };
+
+  const propertyLeases = leases.filter((lease): lease is PropertyLease => lease.type === 'Property');
+  const motorVehicleLeases = leases.filter((lease): lease is MotorVehicleLease => lease.type === 'Motor Vehicle');
 
   return (
     <div className="App">
@@ -40,6 +51,8 @@ function App() {
       <Dashboard
         propertyLeases={propertyLeases}
         motorVehicleLeases={motorVehicleLeases}
+        onUpdateLease={handleUpdateLease}
+        onDeleteLease={handleDeleteLease}
       />
 
       {isModalOpen && (
