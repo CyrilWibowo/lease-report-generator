@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
 import { PropertyLease } from '../types/Lease';
-import { PaymentRow } from './excelHelper';
+import { PaymentRow, calculateXNPV } from './excelHelper';
 import { formatWorksheet } from './styleExcel';
 
 export const generateLeasePayments = (lease: PropertyLease, rows: PaymentRow[]): XLSX.WorkSheet => {
@@ -9,24 +9,8 @@ export const generateLeasePayments = (lease: PropertyLease, rows: PaymentRow[]):
     ['Payment', 'Lease Year', 'Payment Date', 'Amount', 'Note']
   ];
 
-  const firstDate = rows[0].paymentDate;
-  const rate = parseFloat(lease.borrowingRate) / 100;
-  let xnpv = 0;
-
   rows.forEach((row, i) => {
-    data.push([
-      row.payment,
-      row.leaseYear,
-      row.paymentDate,
-      row.amount,
-      row.note
-    ]);
-
-    const daysDiff = (Date.UTC(row.paymentDate.getFullYear(), row.paymentDate.getMonth(), row.paymentDate.getDate()) -
-                  Date.UTC(firstDate.getFullYear(), firstDate.getMonth(), firstDate.getDate())) /
-                 (1000 * 60 * 60 * 24);
-    const yearsDiff = daysDiff / 365;
-    xnpv += row.amount / Math.pow(1 + rate, yearsDiff);
+    data.push([row.payment, row.leaseYear, row.paymentDate, row.amount, row.note]);
   });
 
   // Add total row
@@ -35,12 +19,12 @@ export const generateLeasePayments = (lease: PropertyLease, rows: PaymentRow[]):
   data.push(['', '', 'TOTAL:', totalAmount, '']);
 
   // Add npv row
+  const xnpv = calculateXNPV(lease, rows);
   data.push(['', '', 'NPV:', xnpv, '']);
 
   // Create worksheet
   const worksheet = XLSX.utils.aoa_to_sheet(data);
   formatWorksheet(worksheet, rows);
-
 
   return worksheet;
 };
