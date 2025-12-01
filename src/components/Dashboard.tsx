@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { Lease, PropertyLease, MotorVehicleLease } from '../types/Lease';
 import { generateExcelFromLeases } from '../utils/excelGenerator';
+import { generateExcelFromMotorVehicleLeases } from '../utils/motorVehicleExcelGenerator';
 import EditLeaseModal from './EditLeaseModal';
 import ToXLSXModal, { XLSXGenerationParams } from './ToXLSXModal';
 import './Dashboard.css';
@@ -24,7 +25,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [hoveredLease, setHoveredLease] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [editingLease, setEditingLease] = useState<Lease | null>(null);
-  const [xlsxModalLease, setXlsxModalLease] = useState<PropertyLease | null>(null);
+  const [xlsxModalLease, setXlsxModalLease] = useState<PropertyLease | MotorVehicleLease | null>(null);
   const emptyRows = 10;
 
   const calculateCommittedYears = (lease: Lease): number => {
@@ -50,8 +51,12 @@ const Dashboard: React.FC<DashboardProps> = ({
     return 0;
   };
 
-  const handleGenerateExcel = (lease: PropertyLease, params: XLSXGenerationParams) => {
-    generateExcelFromLeases(lease, params);
+  const handleGenerateExcel = (lease: PropertyLease | MotorVehicleLease, params: XLSXGenerationParams) => {
+    if (lease.type === 'Property') {
+      generateExcelFromLeases(lease as PropertyLease, params);
+    } else {
+      generateExcelFromMotorVehicleLeases(lease as MotorVehicleLease, params);
+    }
   };
 
   const renderIncrementMethodsTooltip = (lease: Lease) => {
@@ -155,19 +160,19 @@ const Dashboard: React.FC<DashboardProps> = ({
           <td>{lease ? lease.description : ''}</td>
           <td>{lease ? lease.vinSerialNo : ''}</td>
           <td>{lease ? lease.regoNo : ''}</td>
-          <td>{lease ? lease.deliveryDate : ''}</td>
-          <td>{lease ? lease.expiryDate : ''}</td>
-          <td>{lease && leasePeriod}</td>
-          <td>{lease ? lease.annualRent : ''}</td>
-          <td>{lease ? lease.borrowingRate : ''}</td>
+          <td>{lease ? formatDate(lease.deliveryDate) : ''}</td>
+          <td>{lease ? formatDate(lease.expiryDate) : ''}</td>
+          <td>{lease && `${leasePeriod} years`}</td>
+          <td>{lease ? formatCurrency(lease.annualRent) : ''}</td>
+          <td>{lease ? `${lease.borrowingRate}%` : ''}</td>
           <td>
             {lease && (
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
                   className="download-btn"
-                  // onClick={() => generateExcelFromLeases(lease)}
+                  onClick={() => setXlsxModalLease(lease)}
                 >
-                  Download
+                  .xlxs
                 </button>
                 <button
                   className="edit-btn"
