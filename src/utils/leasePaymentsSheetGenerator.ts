@@ -3,9 +3,29 @@ import { PropertyLease } from '../types/Lease';
 import { PaymentRow, calculateXNPV } from './excelHelper';
 import { formatWorksheet } from './styleExcel';
 
-export const generateLeasePayments = (lease: PropertyLease, rows: PaymentRow[]): XLSX.WorkSheet => {
-  // Create data array for worksheet
+export const generateLeasePayments = (lease: PropertyLease): XLSX.WorkSheet => {
+  const rows = generatePaymentRows(lease);
+
+  // Calculate values for header
+  const originalAnnualRent = parseFloat(lease.annualRent);
+  const originalMonthlyPayment = Math.round((originalAnnualRent / 12) * 100) / 100;
+  const xnpv = calculateXNPV(lease, rows);
+
+  // Create data array for worksheet with header section
   const data: any[][] = [
+    ['Property Address:', lease.propertyAddress],
+    ['Commencement Date:', lease.commencementDate],
+    ['Expiry Date:', lease.expiryDate],
+    ['Options:', lease.options],
+    ['Original Annual Rent:', originalAnnualRent],
+    ['Original Monthly Payment:', originalMonthlyPayment],
+    [],
+    ['RBA CPI Rate:', `${lease.rbaCpiRate}%`],
+    ['Fixed Increment Rate:', `${lease.fixedIncrementRate}%`],
+    ['Borrowing Rate:', `${lease.borrowingRate}%`],
+    ['NPV:', xnpv],
+    [],
+    [],
     ['Payment', 'Lease Year', 'Payment Date', 'Amount', 'Note']
   ];
 
@@ -17,10 +37,6 @@ export const generateLeasePayments = (lease: PropertyLease, rows: PaymentRow[]):
   data.push([]);
   const totalAmount = rows.reduce((sum, row) => sum + row.amount, 0);
   data.push(['', '', 'TOTAL:', totalAmount, '']);
-
-  // Add npv row
-  const xnpv = calculateXNPV(lease, rows);
-  data.push(['', '', 'NPV:', xnpv, '']);
 
   // Create worksheet
   const worksheet = XLSX.utils.aoa_to_sheet(data);
