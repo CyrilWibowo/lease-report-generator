@@ -3,6 +3,13 @@ export const formatCurrency = (amount: string): string => {
   return `$${num.toLocaleString('en-US')}`;
 }
 
+export const formatCurrency2 = (amount: number): string => {
+  return amount.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
 export const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
   const d = String(date.getDate()).padStart(2, "0");
