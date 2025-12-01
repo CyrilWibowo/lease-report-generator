@@ -4,6 +4,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import { Lease, PropertyLease, MotorVehicleLease } from '../types/Lease';
 import { generateExcelFromLeases } from '../utils/excelGenerator';
 import EditLeaseModal from './EditLeaseModal';
+import ToXLSXModal, { XLSXGenerationParams } from './ToXLSXModal';
 import './Dashboard.css';
 import { formatCurrency, formatDate, getYearDiff } from '../utils/helper';
 
@@ -23,6 +24,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [hoveredLease, setHoveredLease] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [editingLease, setEditingLease] = useState<Lease | null>(null);
+  const [xlsxModalLease, setXlsxModalLease] = useState<PropertyLease | null>(null);
   const emptyRows = 10;
 
   const calculateCommittedYears = (lease: Lease): number => {
@@ -46,6 +48,10 @@ const Dashboard: React.FC<DashboardProps> = ({
       }
     }
     return 0;
+  };
+
+  const handleGenerateExcel = (lease: PropertyLease, params: XLSXGenerationParams) => {
+    generateExcelFromLeases(lease, params);
   };
 
   const renderIncrementMethodsTooltip = (lease: Lease) => {
@@ -116,7 +122,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
                   className="download-btn"
-                  onClick={() => generateExcelFromLeases(lease)}
+                  onClick={() => setXlsxModalLease(lease)}
                 >
                   .xlxs
                 </button>
@@ -243,6 +249,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           onClose={() => setEditingLease(null)}
           onSave={onUpdateLease}
           onDelete={onDeleteLease}
+        />
+      )}
+
+      {xlsxModalLease && (
+        <ToXLSXModal
+          onClose={() => setXlsxModalLease(null)}
+          onGenerate={(params) => handleGenerateExcel(xlsxModalLease, params)}
         />
       )}
     </div>
