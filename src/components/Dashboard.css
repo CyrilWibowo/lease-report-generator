@@ -39,7 +39,12 @@
   text-align: left;
   font-weight: 600;
   color: #495057;
+  user-select: none;
   white-space: nowrap;
+}
+
+.lease-table th:hover {
+  background-color: #e9ecef;
 }
 
 .lease-table tbody tr {
