@@ -213,8 +213,6 @@ export const calculateLeaseLiabilitySummary = (
     }
   });
 
-  shortTerm = Math.abs(shortTerm);
-
   // Calculate long-term: liability ending at the end date
   const endDateIndex = allPaymentRows.findIndex(row => {
     const paymentDate = new Date(row.paymentDate);
