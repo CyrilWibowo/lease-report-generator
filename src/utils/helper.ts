@@ -18,6 +18,19 @@ export const formatDate = (dateStr: string): string => {
   return `${d}/${m}/${y}`;
 }
 
+export const formatDateToDate = (date: Date): string => {
+  const d = String(date.getDate()).padStart(2, "0");
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const y = date.getFullYear();
+  return `${d}/${m}/${y}`;
+}
+
 export const getYearDiff = (start: Date, end: Date): number => {
   return Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365))
 }
+
+export const normalizeDate = (date: Date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
