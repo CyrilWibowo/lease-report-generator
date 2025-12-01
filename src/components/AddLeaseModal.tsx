@@ -96,6 +96,8 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
         description: '',
         vinSerialNo: '',
         regoNo: '',
+        engineNumber: '',
+        vehicleType: '',
         deliveryDate: '',
         expiryDate: '',
         annualRent: '',
@@ -207,6 +209,14 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
       }
       if (!mvLease.regoNo?.trim()) {
         newErrors.regoNo = true;
+        isValid = false;
+      }
+      if (!mvLease.engineNumber?.trim()) {
+        newErrors.engineNumber = true;
+        isValid = false;
+      }
+      if (!mvLease.vehicleType?.trim()) {
+        newErrors.vehicleType = true;
         isValid = false;
       }
       if (!mvLease.deliveryDate) {
