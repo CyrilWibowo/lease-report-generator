@@ -67,6 +67,16 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
+  const isLeaseExpired = (lease: PropertyLease | MotorVehicleLease): boolean => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const expiryDate = new Date(lease.expiryDate);
+    expiryDate.setHours(0, 0, 0, 0);
+
+    return expiryDate < today;
+  };
+
   const renderIncrementMethodsTooltip = (lease: Lease) => {
     const committedYears = calculateCommittedYears(lease);
     if (committedYears < 1) return null;
@@ -118,7 +128,9 @@ const Dashboard: React.FC<DashboardProps> = ({
           <td>{lease ? lease.lessor : ''}</td>
           <td>{lease ? lease.propertyAddress : ''}</td>
           <td>{lease ? formatDate(lease.commencementDate) : ''}</td>
-          <td>{lease ? formatDate(lease.expiryDate) : ''}</td>
+          <td style={{ color: lease && isLeaseExpired(lease) ? '#dc3545' : '#212529' }}>
+            {lease ? formatDate(lease.expiryDate) : ''}
+          </td>
           <td>{lease ? `${lease.options} years` : ''}</td>
           <td
             className={lease ? 'committed-years-cell' : ''}
@@ -133,13 +145,26 @@ const Dashboard: React.FC<DashboardProps> = ({
           <td>{lease ? `${lease.fixedIncrementRate}%` : ''}</td>
           <td>
             {lease && (
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  className="download-btn"
-                  onClick={() => setXlsxModalLease(lease)}
-                >
-                  .xlxs
-                </button>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div
+                    style={{
+                      width: '12px',
+                      height: '12px',
+                      borderRadius: '50%',
+                      backgroundColor: isLeaseExpired(lease) ? '#dc3545' : '#28a745',
+                      cursor: 'help',
+                      position: 'relative'
+                    }}
+                    title={isLeaseExpired(lease) ? 'Lease expired' : 'Lease active'}
+                  />
+                  <button
+                    className="download-btn"
+                    onClick={() => setXlsxModalLease(lease)}
+                  >
+                    .xlxs
+                  </button>
+                </div>
                 <button
                   className="edit-btn"
                   onClick={() => setEditingLease(lease)}
@@ -172,19 +197,34 @@ const Dashboard: React.FC<DashboardProps> = ({
           <td>{lease ? lease.vinSerialNo : ''}</td>
           <td>{lease ? lease.regoNo : ''}</td>
           <td>{lease ? formatDate(lease.deliveryDate) : ''}</td>
-          <td>{lease ? formatDate(lease.expiryDate) : ''}</td>
+          <td style={{ color: lease && isLeaseExpired(lease) ? '#dc3545' : '#212529' }}>
+            {lease ? formatDate(lease.expiryDate) : ''}
+          </td>
           <td>{lease && `${leasePeriod} years`}</td>
           <td>{lease ? formatCurrency(lease.annualRent) : ''}</td>
           <td>{lease ? `${lease.borrowingRate}%` : ''}</td>
           <td>
             {lease && (
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  className="download-btn"
-                  onClick={() => setXlsxModalLease(lease)}
-                >
-                  .xlxs
-                </button>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div
+                    style={{
+                      width: '12px',
+                      height: '12px',
+                      borderRadius: '50%',
+                      backgroundColor: isLeaseExpired(lease) ? '#dc3545' : '#28a745',
+                      cursor: 'help',
+                      position: 'relative',
+                    }}
+                    title={isLeaseExpired(lease) ? 'Lease expired' : 'Lease active'}
+                  />
+                  <button
+                    className="download-btn"
+                    onClick={() => setXlsxModalLease(lease)}
+                  >
+                    .xlxs
+                  </button>
+                </div>
                 <button
                   className="edit-btn"
                   onClick={() => setEditingLease(lease)}
