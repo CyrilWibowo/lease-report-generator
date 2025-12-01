@@ -274,7 +274,7 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
               </>
             )}
 
-            {/* Motor Vehicle Lease Fields - Entity Name removed */}
+            {/* Motor Vehicle Lease Fields */}
             {!isPropertyLease && (
               <>
                 <div className="form-group">
@@ -286,6 +286,35 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
                     value={(editedLease as MotorVehicleLease).description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     placeholder="Enter description"
+                  />
+                </div>
+
+                {/* MOVED HERE */}
+                <div className="form-group">
+                  <label className="form-label">Vehicle Type *</label>
+                  {errors.vehicleType && <span className="error-text">This field is required</span>}
+                  <select
+                    className={errors.vehicleType ? 'form-input-error' : 'form-input'}
+                    value={(editedLease as MotorVehicleLease).vehicleType}
+                    onChange={(e) => handleInputChange('vehicleType', e.target.value)}
+                  >
+                    <option value="">Select vehicle type...</option>
+                    <option value="Ute">Ute</option>
+                    <option value="Wagon">Wagon</option>
+                    <option value="Forklift">Forklift</option>
+                  </select>
+                </div>
+
+                {/* MOVED HERE */}
+                <div className="form-group">
+                  <label className="form-label">Engine Number *</label>
+                  {errors.engineNumber && <span className="error-text">This field is required</span>}
+                  <input
+                    type="text"
+                    className={errors.engineNumber ? 'form-input-error' : 'form-input'}
+                    value={(editedLease as MotorVehicleLease).engineNumber}
+                    onChange={(e) => handleInputChange('engineNumber', e.target.value)}
+                    placeholder="Enter Engine Number"
                   />
                 </div>
 
