@@ -27,6 +27,14 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [editingLease, setEditingLease] = useState<Lease | null>(null);
   const [xlsxModalLease, setXlsxModalLease] = useState<PropertyLease | MotorVehicleLease | null>(null);
   const emptyRows = 10;
+  const [propertySortConfig, setPropertySortConfig] = useState<{
+    key: string | null;
+    direction: 'asc' | 'desc';
+  }>({ key: null, direction: 'asc' });
+  const [motorVehicleSortConfig, setMotorVehicleSortConfig] = useState<{
+    key: string | null;
+    direction: 'asc' | 'desc';
+  }>({ key: null, direction: 'asc' });
 
   const calculateCommittedYears = (lease: Lease): number => {
     if (lease.type === 'Property') {
@@ -90,6 +98,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const renderPropertyTableRows = () => {
     const rows = [];
+    const sortedLeases = sortData(propertyLeases, propertySortConfig);
 
     const handleMouseEnter = (lease: PropertyLease, event: React.MouseEvent<HTMLTableCellElement>) => {
       const rect = event.currentTarget.getBoundingClientRect();
@@ -100,8 +109,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       setHoveredLease(lease.id);
     };
 
-    for (let i = 0; i < Math.max(emptyRows, propertyLeases.length); i++) {
-      const lease = propertyLeases[i];
+    for (let i = 0; i < Math.max(emptyRows, sortedLeases.length); i++) {
+      const lease = sortedLeases[i];
       const committedYears = lease ? calculateCommittedYears(lease) : 0;
 
       rows.push(
@@ -149,17 +158,17 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const renderMotorVehicleTableRows = () => {
     const rows = [];
+    const sortedLeases = sortData(motorVehicleLeases, motorVehicleSortConfig);
 
-    for (let i = 0; i < Math.max(emptyRows, motorVehicleLeases.length); i++) {
-      const lease = motorVehicleLeases[i];
+    for (let i = 0; i < Math.max(emptyRows, sortedLeases.length); i++) {
+      const lease = sortedLeases[i];
       const leasePeriod = lease ? calculateCommittedYears(lease) : 0;
-
       rows.push(
         <tr key={i}>
           <td>{lease ? lease.lessor : ''}</td>
           <td>{lease ? lease.description : ''}</td>
-          <td>{lease ? lease.vehicleType : ''}</td>      {/* MOVED HERE */}
-          <td>{lease ? lease.engineNumber : ''}</td>     {/* MOVED HERE */}
+          <td>{lease ? lease.vehicleType : ''}</td>
+          <td>{lease ? lease.engineNumber : ''}</td>
           <td>{lease ? lease.vinSerialNo : ''}</td>
           <td>{lease ? lease.regoNo : ''}</td>
           <td>{lease ? formatDate(lease.deliveryDate) : ''}</td>
@@ -192,6 +201,75 @@ const Dashboard: React.FC<DashboardProps> = ({
     return rows;
   };
 
+  const sortData = <T extends PropertyLease | MotorVehicleLease>(
+    data: T[],
+    sortConfig: { key: string | null; direction: 'asc' | 'desc' }
+  ): T[] => {
+    if (!sortConfig.key) return data;
+
+    return [...data].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      // Handle special cases for calculated fields
+      if (sortConfig.key === 'committedYears') {
+        aValue = calculateCommittedYears(a);
+        bValue = calculateCommittedYears(b);
+      } else {
+        aValue = a[sortConfig.key as keyof T];
+        bValue = b[sortConfig.key as keyof T];
+      }
+
+      // Handle dates
+      if (sortConfig.key && sortConfig.key.toLowerCase().includes('date')) {
+        aValue = new Date(aValue).getTime();
+        bValue = new Date(bValue).getTime();
+      }
+      // Handle numeric fields
+      else if (sortConfig.key && ['annualRent', 'borrowingRate', 'rbaCpiRate', 'fixedIncrementRate', 'options', 'committedYears'].includes(sortConfig.key)) {
+        aValue = parseFloat(aValue) || 0;
+        bValue = parseFloat(bValue) || 0;
+      }
+      // Handle strings (alphabetical)
+      else {
+        aValue = String(aValue || '').toLowerCase();
+        bValue = String(bValue || '').toLowerCase();
+      }
+
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  };
+
+  const handleSort = (
+    key: string,
+    isPropertyTable: boolean
+  ) => {
+    const sortConfig = isPropertyTable ? propertySortConfig : motorVehicleSortConfig;
+    const setSortConfig = isPropertyTable ? setPropertySortConfig : setMotorVehicleSortConfig;
+
+    const direction =
+      sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc';
+    setSortConfig({ key, direction });
+  };
+
+  const renderSortIndicator = (columnKey: string, isPropertyTable: boolean) => {
+    const sortConfig = isPropertyTable ? propertySortConfig : motorVehicleSortConfig;
+
+    if (sortConfig.key !== columnKey) return null;
+
+    return (
+      <span style={{ marginLeft: '4px' }}>
+        {sortConfig.direction === 'asc' ? '▲' : '▼'}
+      </span>
+    );
+  };
+
   return (
     <div className="dashboard-container">
       {hoveredLease && propertyLeases.find(l => l.id === hoveredLease) &&
@@ -205,16 +283,36 @@ const Dashboard: React.FC<DashboardProps> = ({
           <table className="lease-table">
             <thead>
               <tr>
-                <th>Lessor</th>
-                <th>Property Address</th>
-                <th>Commencement Date</th>
-                <th>Expiry Date</th>
-                <th>Options</th>
-                <th>Total Committed Years</th>
-                <th>Annual Rent (exc. GST)</th>
-                <th>RBA CPI Rate</th>
-                <th>Borrowing Rate</th>
-                <th>Fixed Increment Rate</th>
+                <th onClick={() => handleSort('lessor', true)} style={{ cursor: 'pointer' }}>
+                  Lessor{renderSortIndicator('lessor', true)}
+                </th>
+                <th onClick={() => handleSort('propertyAddress', true)} style={{ cursor: 'pointer' }}>
+                  Property Address{renderSortIndicator('propertyAddress', true)}
+                </th>
+                <th onClick={() => handleSort('commencementDate', true)} style={{ cursor: 'pointer' }}>
+                  Commencement Date{renderSortIndicator('commencementDate', true)}
+                </th>
+                <th onClick={() => handleSort('expiryDate', true)} style={{ cursor: 'pointer' }}>
+                  Expiry Date{renderSortIndicator('expiryDate', true)}
+                </th>
+                <th onClick={() => handleSort('options', true)} style={{ cursor: 'pointer' }}>
+                  Options{renderSortIndicator('options', true)}
+                </th>
+                <th onClick={() => handleSort('committedYears', true)} style={{ cursor: 'pointer' }}>
+                  Total Committed Years{renderSortIndicator('committedYears', true)}
+                </th>
+                <th onClick={() => handleSort('annualRent', true)} style={{ cursor: 'pointer' }}>
+                  Annual Rent (exc. GST){renderSortIndicator('annualRent', true)}
+                </th>
+                <th onClick={() => handleSort('rbaCpiRate', true)} style={{ cursor: 'pointer' }}>
+                  RBA CPI Rate{renderSortIndicator('rbaCpiRate', true)}
+                </th>
+                <th onClick={() => handleSort('borrowingRate', true)} style={{ cursor: 'pointer' }}>
+                  Borrowing Rate{renderSortIndicator('borrowingRate', true)}
+                </th>
+                <th onClick={() => handleSort('fixedIncrementRate', true)} style={{ cursor: 'pointer' }}>
+                  Fixed Increment Rate{renderSortIndicator('fixedIncrementRate', true)}
+                </th>
                 <th></th>
               </tr>
             </thead>
@@ -231,17 +329,39 @@ const Dashboard: React.FC<DashboardProps> = ({
           <table className="lease-table">
             <thead>
               <tr>
-                <th>Lessor</th>
-                <th>Description</th>
-                <th>Vehicle Type</th>
-                <th>Engine Number</th>
-                <th>VIN/Serial No.</th>
-                <th>Rego No.</th>
-                <th>Delivery Date</th>
-                <th>Expiry Date</th>
-                <th>Lease Period</th>
-                <th>Annual Rent (exc. GST)</th>
-                <th>Borrowing Rate</th>
+                <th onClick={() => handleSort('lessor', false)} style={{ cursor: 'pointer' }}>
+                  Lessor{renderSortIndicator('lessor', false)}
+                </th>
+                <th onClick={() => handleSort('description', false)} style={{ cursor: 'pointer' }}>
+                  Description{renderSortIndicator('description', false)}
+                </th>
+                <th onClick={() => handleSort('vehicleType', false)} style={{ cursor: 'pointer' }}>
+                  Vehicle Type{renderSortIndicator('vehicleType', false)}
+                </th>
+                <th onClick={() => handleSort('engineNumber', false)} style={{ cursor: 'pointer' }}>
+                  Engine Number{renderSortIndicator('engineNumber', false)}
+                </th>
+                <th onClick={() => handleSort('vinSerialNo', false)} style={{ cursor: 'pointer' }}>
+                  VIN/Serial No.{renderSortIndicator('vinSerialNo', false)}
+                </th>
+                <th onClick={() => handleSort('regoNo', false)} style={{ cursor: 'pointer' }}>
+                  Rego No.{renderSortIndicator('regoNo', false)}
+                </th>
+                <th onClick={() => handleSort('deliveryDate', false)} style={{ cursor: 'pointer' }}>
+                  Delivery Date{renderSortIndicator('deliveryDate', false)}
+                </th>
+                <th onClick={() => handleSort('expiryDate', false)} style={{ cursor: 'pointer' }}>
+                  Expiry Date{renderSortIndicator('expiryDate', false)}
+                </th>
+                <th onClick={() => handleSort('committedYears', false)} style={{ cursor: 'pointer' }}>
+                  Lease Period{renderSortIndicator('committedYears', false)}
+                </th>
+                <th onClick={() => handleSort('annualRent', false)} style={{ cursor: 'pointer' }}>
+                  Annual Rent (exc. GST){renderSortIndicator('annualRent', false)}
+                </th>
+                <th onClick={() => handleSort('borrowingRate', false)} style={{ cursor: 'pointer' }}>
+                  Borrowing Rate{renderSortIndicator('borrowingRate', false)}
+                </th>
                 <th></th>
               </tr>
             </thead>
