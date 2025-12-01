@@ -28,9 +28,18 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
       if (propertyLease.commencementDate && propertyLease.expiryDate) {
         const start = new Date(propertyLease.commencementDate);
         const end = new Date(propertyLease.expiryDate);
-        const yearsDiff = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
+
+        // Calculate total months from commencement to expiry
+        const months = (end.getFullYear() - start.getFullYear()) * 12 +
+                      (end.getMonth() - start.getMonth());
+
+        // Only add 1 if the end date day is AFTER the start date day
+        const adjustedMonths = end.getDate() > start.getDate() ? months + 1 : months;
+
         const optionsYears = parseInt(propertyLease.options) || 0;
-        const total = Math.floor(yearsDiff + optionsYears);
+        const totalMonths = adjustedMonths + (optionsYears * 12);
+        const total = Math.ceil(totalMonths / 12);
+
         setCommittedYears(total > 0 ? total : 0);
       } else {
         setCommittedYears(0);
@@ -40,8 +49,16 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
       if (mvLease.deliveryDate && mvLease.expiryDate) {
         const start = new Date(mvLease.deliveryDate);
         const end = new Date(mvLease.expiryDate);
-        const yearsDiff = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
-        setCommittedYears(Math.floor(yearsDiff) > 0 ? Math.floor(yearsDiff) : 0);
+
+        // Calculate total months
+        const months = (end.getFullYear() - start.getFullYear()) * 12 +
+                      (end.getMonth() - start.getMonth());
+
+        // Only add 1 if the end date day is AFTER the start date day
+        const adjustedMonths = end.getDate() > start.getDate() ? months + 1 : months;
+        const total = Math.ceil(adjustedMonths / 12);
+
+        setCommittedYears(total > 0 ? total : 0);
       } else {
         setCommittedYears(0);
       }
@@ -86,10 +103,6 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
       newErrors.annualRent = true;
       isValid = false;
     }
-    if (!editedLease.rbaCpiRate.trim()) {
-      newErrors.rbaCpiRate = true;
-      isValid = false;
-    }
     if (!editedLease.borrowingRate.trim()) {
       newErrors.borrowingRate = true;
       isValid = false;
@@ -117,12 +130,26 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
         newErrors.fixedIncrementRate = true;
         isValid = false;
       }
-    } else {
-      const mvLease = editedLease as MotorVehicleLease;
-      if (!mvLease.entityName?.trim()) {
-        newErrors.entityName = true;
+      if (!propertyLease.rbaCpiRate.trim()) {
+        newErrors.rbaCpiRate = true;
         isValid = false;
       }
+
+      // Validate increment methods starting from year 1
+      if (committedYears >= 1) {
+        for (let year = 1; year <= committedYears; year++) {
+          if (!propertyLease.incrementMethods[year]) {
+            newErrors[`incrementMethod_${year}`] = true;
+            isValid = false;
+          }
+          if (propertyLease.incrementMethods[year] === 'Market' && !propertyLease.overrideAmounts[year]?.trim()) {
+            newErrors[`overrideAmount_${year}`] = true;
+            isValid = false;
+          }
+        }
+      }
+    } else {
+      const mvLease = editedLease as MotorVehicleLease;
       if (!mvLease.description?.trim()) {
         newErrors.description = true;
         isValid = false;
@@ -142,19 +169,6 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
       if (!mvLease.expiryDate) {
         newErrors.expiryDate = true;
         isValid = false;
-      }
-    }
-
-    if (committedYears > 1) {
-      for (let year = 2; year <= committedYears; year++) {
-        if (!editedLease.incrementMethods[year]) {
-          newErrors[`incrementMethod_${year}`] = true;
-          isValid = false;
-        }
-        if (editedLease.incrementMethods[year] === 'Market' && !editedLease.overrideAmounts[year]?.trim()) {
-          newErrors[`overrideAmount_${year}`] = true;
-          isValid = false;
-        }
       }
     }
 
@@ -260,21 +274,9 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
               </>
             )}
 
-            {/* Motor Vehicle Lease Fields */}
+            {/* Motor Vehicle Lease Fields - Entity Name removed */}
             {!isPropertyLease && (
               <>
-                <div className="form-group">
-                  <label className="form-label">Entity Name *</label>
-                  {errors.entityName && <span className="error-text">This field is required</span>}
-                  <input
-                    type="text"
-                    className={errors.entityName ? 'form-input-error' : 'form-input'}
-                    value={(editedLease as MotorVehicleLease).entityName}
-                    onChange={(e) => handleInputChange('entityName', e.target.value)}
-                    placeholder="Enter entity name"
-                  />
-                </div>
-
                 <div className="form-group">
                   <label className="form-label">Description *</label>
                   {errors.description && <span className="error-text">This field is required</span>}
@@ -349,19 +351,21 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
               />
             </div>
 
-            {/* RBA CPI Rate - Common field */}
-            <div className="form-group">
-              <label className="form-label">RBA CPI Rate (%) *</label>
-              {errors.rbaCpiRate && <span className="error-text">This field is required</span>}
-              <input
-                type="number"
-                className={errors.rbaCpiRate ? 'form-input-error' : 'form-input'}
-                value={editedLease.rbaCpiRate}
-                onChange={(e) => handleInputChange('rbaCpiRate', e.target.value)}
-                placeholder="0.00"
-                step="0.01"
-              />
-            </div>
+            {/* RBA CPI Rate - Property only */}
+            {isPropertyLease && (
+              <div className="form-group">
+                <label className="form-label">RBA CPI Rate (%) *</label>
+                {errors.rbaCpiRate && <span className="error-text">This field is required</span>}
+                <input
+                  type="number"
+                  className={errors.rbaCpiRate ? 'form-input-error' : 'form-input'}
+                  value={(editedLease as PropertyLease).rbaCpiRate}
+                  onChange={(e) => handleInputChange('rbaCpiRate', e.target.value)}
+                  placeholder="0.00"
+                  step="0.01"
+                />
+              </div>
+            )}
 
             {/* Borrowing Rate - Common field */}
             <div className="form-group">
@@ -394,11 +398,12 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
             )}
           </div>
 
-          {committedYears > 1 && (
+          {/* Only show increment methods for Property leases, starting from year 1 */}
+          {isPropertyLease && committedYears >= 1 && (
             <div className="increment-section">
               <h4 className="increment-title">Increment Methods (Committed Years: {committedYears})</h4>
               <div className="increment-grid">
-                {Array.from({ length: committedYears - 1 }, (_, i) => i + 2).map((year) => (
+                {Array.from({ length: committedYears }, (_, i) => i + 1).map((year) => (
                   <div key={year} className="increment-group">
                     <div className="form-group">
                       <label className="form-label">Year {year}</label>
@@ -408,9 +413,10 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
                         className={errors[`incrementMethod_${year}`] ? 'form-input-error' : 'form-input'}
                       >
                         <option value="">Select method...</option>
-                        {isPropertyLease && <option value="Fixed">Fix Rate</option>}
+                        <option value="Fixed">Fix Rate</option>
                         <option value="Market">Market/Override</option>
                         <option value="CPI">CPI</option>
+                        <option value="None">None</option>
                       </select>
                       {errors[`incrementMethod_${year}`] && (
                         <span className="error-text">This field is required</span>
