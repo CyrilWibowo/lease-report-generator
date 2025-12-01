@@ -23,6 +23,8 @@ export interface MotorVehicleLease extends BaseLease {
   description: string;
   vinSerialNo: string;
   regoNo: string;
+  engineNumber: string;
+  vehicleType: string;
   deliveryDate: string;
   expiryDate: string;
   annualRent: string;
