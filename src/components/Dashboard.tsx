@@ -158,6 +158,8 @@ const Dashboard: React.FC<DashboardProps> = ({
         <tr key={i}>
           <td>{lease ? lease.lessor : ''}</td>
           <td>{lease ? lease.description : ''}</td>
+          <td>{lease ? lease.vehicleType : ''}</td>      {/* MOVED HERE */}
+          <td>{lease ? lease.engineNumber : ''}</td>     {/* MOVED HERE */}
           <td>{lease ? lease.vinSerialNo : ''}</td>
           <td>{lease ? lease.regoNo : ''}</td>
           <td>{lease ? formatDate(lease.deliveryDate) : ''}</td>
@@ -231,6 +233,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               <tr>
                 <th>Lessor</th>
                 <th>Description</th>
+                <th>Vehicle Type</th>
+                <th>Engine Number</th>
                 <th>VIN/Serial No.</th>
                 <th>Rego No.</th>
                 <th>Delivery Date</th>
