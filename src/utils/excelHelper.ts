@@ -1,4 +1,4 @@
-import { PropertyLease } from '../types/Lease';
+import { Lease } from '../types/Lease';
 
 export interface PaymentRow {
   payment: number;
@@ -8,7 +8,7 @@ export interface PaymentRow {
   note: string;
 }
 
-export const calculateXNPV = (lease: PropertyLease, rows: PaymentRow[]): number => {
+export const calculateXNPV = (lease: Lease, rows: PaymentRow[]): number => {
   const firstDate = rows[0].paymentDate;
   const rate = parseFloat(lease.borrowingRate) / 100;
   let xnpv = 0;
