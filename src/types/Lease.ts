@@ -2,7 +2,6 @@
 export interface BaseLease {
   id: string;
   lessor: string;
-  rbaCpiRate: string;
   borrowingRate: string;
   incrementMethods: { [year: number]: string };
   overrideAmounts: { [year: number]: string };
@@ -16,11 +15,11 @@ export interface PropertyLease extends BaseLease {
   options: string;
   annualRent: string;
   fixedIncrementRate: string;
+  rbaCpiRate: string;
 }
 
 export interface MotorVehicleLease extends BaseLease {
   type: 'Motor Vehicle';
-  entityName: string;
   description: string;
   vinSerialNo: string;
   regoNo: string;
