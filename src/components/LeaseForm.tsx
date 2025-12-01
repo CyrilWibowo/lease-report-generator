@@ -98,21 +98,9 @@ const LeaseForm: React.FC<LeaseFormProps> = ({
           </>
         )}
 
-        {/* Motor Vehicle Lease Fields */}
+        {/* Motor Vehicle Lease Fields - Entity Name removed */}
         {!isPropertyLease && (
           <>
-            <div className="form-group">
-              <label>Entity Name *</label>
-              {errors.entityName && <span className="error-text">This field is required</span>}
-              <input
-                type="text"
-                className={errors.entityName ? 'error' : ''}
-                value={(lease as MotorVehicleLease).entityName}
-                onChange={(e) => onInputChange('entityName', e.target.value)}
-                placeholder="Enter entity name"
-              />
-            </div>
-
             <div className="form-group">
               <label>Description *</label>
               {errors.description && <span className="error-text">This field is required</span>}
@@ -187,19 +175,21 @@ const LeaseForm: React.FC<LeaseFormProps> = ({
           />
         </div>
 
-        {/* RBA CPI Rate - Common field */}
-        <div className="form-group">
-          <label>RBA CPI Rate (%) *</label>
-          {errors.rbaCpiRate && <span className="error-text">This field is required</span>}
-          <input
-            type="number"
-            className={errors.rbaCpiRate ? 'error' : ''}
-            value={lease.rbaCpiRate}
-            onChange={(e) => onInputChange('rbaCpiRate', e.target.value)}
-            placeholder="0.00"
-            step="0.01"
-          />
-        </div>
+        {/* RBA CPI Rate - Property only */}
+        {isPropertyLease && (
+          <div className="form-group">
+            <label>RBA CPI Rate (%) *</label>
+            {errors.rbaCpiRate && <span className="error-text">This field is required</span>}
+            <input
+              type="number"
+              className={errors.rbaCpiRate ? 'error' : ''}
+              value={(lease as PropertyLease).rbaCpiRate}
+              onChange={(e) => onInputChange('rbaCpiRate', e.target.value)}
+              placeholder="0.00"
+              step="0.01"
+            />
+          </div>
+        )}
 
         {/* Borrowing Rate - Common field */}
         <div className="form-group">
@@ -232,11 +222,12 @@ const LeaseForm: React.FC<LeaseFormProps> = ({
         )}
       </div>
 
-      {committedYears > 1 && (
+      {/* Only show increment methods for Property leases, starting from year 1 */}
+      {isPropertyLease && committedYears >= 1 && (
         <div className="increment-methods-section">
           <h4>Increment Methods (Committed Years: {committedYears})</h4>
           <div className="increment-methods-grid">
-            {Array.from({ length: committedYears - 1 }, (_, i) => i + 2).map((year) => (
+            {Array.from({ length: committedYears }, (_, i) => i + 1).map((year) => (
               <div key={year} className="increment-method-group">
                 <div className="form-group">
                   <label>Year {year}</label>
@@ -246,9 +237,10 @@ const LeaseForm: React.FC<LeaseFormProps> = ({
                     className={errors[`incrementMethod_${year}`] ? 'error' : ''}
                   >
                     <option value="">Select method...</option>
-                    {isPropertyLease && <option value="Fixed">Fix Rate</option>}
+                    <option value="Fixed">Fix Rate</option>
                     <option value="Market">Market/Override</option>
                     <option value="CPI">CPI</option>
+                    <option value="None">None</option>
                   </select>
                   {errors[`incrementMethod_${year}`] && (
                     <span className="error-text">This field is required</span>
