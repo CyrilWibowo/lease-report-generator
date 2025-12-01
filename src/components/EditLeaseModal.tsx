@@ -289,7 +289,6 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
                   />
                 </div>
 
-                {/* MOVED HERE */}
                 <div className="form-group">
                   <label className="form-label">Vehicle Type *</label>
                   {errors.vehicleType && <span className="error-text">This field is required</span>}
@@ -305,7 +304,6 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
                   </select>
                 </div>
 
-                {/* MOVED HERE */}
                 <div className="form-group">
                   <label className="form-label">Engine Number *</label>
                   {errors.engineNumber && <span className="error-text">This field is required</span>}
