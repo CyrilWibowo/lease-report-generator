@@ -50,7 +50,10 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const renderIncrementMethodsTooltip = (lease: Lease) => {
     const committedYears = calculateCommittedYears(lease);
-    if (committedYears <= 1) return null;
+    if (committedYears < 1) return null;
+
+    // Only show tooltip for Property leases
+    if (lease.type !== 'Property') return null;
 
     return (
       <div
@@ -61,7 +64,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         }}
       >
         <div className="tooltip-header">Increment Methods</div>
-        {Array.from({ length: committedYears - 1 }, (_, i) => i + 2).map((year) => {
+        {Array.from({ length: committedYears }, (_, i) => i + 1).map((year) => {
           const method = lease.incrementMethods[year];
 
           return (
@@ -136,15 +139,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   const renderMotorVehicleTableRows = () => {
     const rows = [];
 
-    const handleMouseEnter = (lease: MotorVehicleLease, event: React.MouseEvent<HTMLTableCellElement>) => {
-      const rect = event.currentTarget.getBoundingClientRect();
-      setTooltipPosition({
-        x: rect.left,
-        y: rect.bottom + 8
-      });
-      setHoveredLease(lease.id);
-    };
-
     for (let i = 0; i < Math.max(emptyRows, motorVehicleLeases.length); i++) {
       const lease = motorVehicleLeases[i];
       const leasePeriod = lease ? calculateCommittedYears(lease) : 0;
@@ -152,21 +146,13 @@ const Dashboard: React.FC<DashboardProps> = ({
       rows.push(
         <tr key={i}>
           <td>{lease ? lease.lessor : ''}</td>
-          <td>{lease ? lease.entityName : ''}</td>
           <td>{lease ? lease.description : ''}</td>
           <td>{lease ? lease.vinSerialNo : ''}</td>
           <td>{lease ? lease.regoNo : ''}</td>
           <td>{lease ? lease.deliveryDate : ''}</td>
           <td>{lease ? lease.expiryDate : ''}</td>
-          <td
-            className={lease ? 'committed-years-cell' : ''}
-            onMouseEnter={(e) => lease && handleMouseEnter(lease, e)}
-            onMouseLeave={() => setHoveredLease(null)}
-          >
-            {lease && leasePeriod}
-          </td>
+          <td>{lease && leasePeriod}</td>
           <td>{lease ? lease.annualRent : ''}</td>
-          <td>{lease ? lease.rbaCpiRate : ''}</td>
           <td>{lease ? lease.borrowingRate : ''}</td>
           <td>
             {lease && (
@@ -233,7 +219,6 @@ const Dashboard: React.FC<DashboardProps> = ({
             <thead>
               <tr>
                 <th>Lessor</th>
-                <th>Entity Name</th>
                 <th>Description</th>
                 <th>VIN/Serial No.</th>
                 <th>Rego No.</th>
@@ -241,7 +226,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <th>Expiry Date</th>
                 <th>Lease Period</th>
                 <th>Annual Rent (exc. GST)</th>
-                <th>RBA CPI Rate</th>
                 <th>Borrowing Rate</th>
                 <th></th>
               </tr>
