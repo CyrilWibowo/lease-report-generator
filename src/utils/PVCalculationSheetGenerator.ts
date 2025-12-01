@@ -1,46 +1,38 @@
 import * as XLSX from 'xlsx';
 import { PropertyLease } from '../types/Lease';
-import { PaymentRow } from './excelHelper';
 import { generatePaymentRows } from './leasePaymentsSheetGenerator';
+import { XLSXGenerationParams } from '../components/ToXLSXModal';
+import { formatDate, formatDateToDate } from './helper';
+import {
+  calculatePresentValue,
+  generateCashFlowsOfFutureLeasePayment,
+  generateRightOfUseAsset,
+  generateLeaseLiability,
+  calculateLeaseLiabilitySummary,
+  calculatePVInterestAccretion,
+  calculateLeasePaymentsDue,
+  generateJournalTable,
+  getNextYearEnd
+} from './pvCalculationHelpers';
+import { formatPVWorksheet } from './pvWorksheetFormatter';
 
-interface CashFlowRow {
-  paymentDate: Date;
-  baseRent: number;
-  other: string;
-  parking: string;
-  totalCashFlows: number;
-  leaseComponent: number;
-}
-
-interface RightOfUseAssetRow {
-  date: string;
-  period: number;
-  assetBeginning: number;
-  depreciation: number;
-  assetEnding: number;
-}
-
-interface LeaseLiabilityRow {
-  period: string;
-  liabilityBeginning: number;
-  payment: number;
-  interestExpense: number;
-  liabilityEnding: number;
-}
-
-export const generatePVCalculation = (lease: PropertyLease): XLSX.WorkSheet => {
+export const generatePVCalculation = (lease: PropertyLease, params: XLSXGenerationParams): XLSX.WorkSheet => {
   // Get all payment rows from the lease payments logic
   const allPaymentRows = generatePaymentRows(lease);
 
-  // Constants
-  const ALLOCATION_TO_LEASE_COMPONENT = 1;
+  // Filter payment rows based on opening and closing dates
+  const openingDate = new Date(params.leaseLiabilityOpening);
+  const closingDate = new Date(params.leaseLiabilityClosing);
+
+  // Constants from params
+  const ALLOCATION_TO_LEASE_COMPONENT = params.allocationToLeaseComponent;
   const OTHER = 0;
   const PARKING = 0;
-  const PAYMENT_TIMING = 'Beginning';
+  const PAYMENT_TIMING = params.paymentTiming;
 
   // Get first date for the header
   const firstDate = allPaymentRows[0]?.paymentDate;
-  const formattedFirstDate = firstDate ? formatDate(firstDate) : '';
+  const formattedFirstDate = firstDate ? formatDateToDate(firstDate) : '';
 
   // Calculate lease component values for PV calculation
   const leaseComponentValues = allPaymentRows.map(row => {
@@ -78,6 +70,44 @@ export const generatePVCalculation = (lease: PropertyLease): XLSX.WorkSheet => {
     PAYMENT_TIMING
   );
 
+  // Calculate lease liability summaries
+  const openingSummary = calculateLeaseLiabilitySummary(
+    leaseLiabilityRows,
+    allPaymentRows,
+    openingDate,
+    closingDate
+  );
+
+  const closingSummary = calculateLeaseLiabilitySummary(
+    leaseLiabilityRows,
+    allPaymentRows,
+    closingDate,
+    getNextYearEnd(closingDate)
+  );
+
+  const pvInterestAccretion = calculatePVInterestAccretion(
+    leaseLiabilityRows,
+    allPaymentRows,
+    openingDate
+  );
+
+  // Calculate lease payments due table
+  const leasePaymentsDueRows = calculateLeasePaymentsDue(
+    leaseLiabilityRows,
+    allPaymentRows,
+    closingDate
+  );
+
+  // Generate journal table
+  const journalRows = generateJournalTable(
+    presentValue,
+    leaseLiabilityRows,
+    rightOfUseAssetRows,
+    allPaymentRows,
+    openingDate,
+    closingDate
+  );
+
   // Build the data array with header
   const data: any[][] = [
     [lease.propertyAddress],
@@ -86,13 +116,15 @@ export const generatePVCalculation = (lease: PropertyLease): XLSX.WorkSheet => {
     ['Payments made at beginning or end of period:', PAYMENT_TIMING],
     ['Allocation to Lease Component:', ALLOCATION_TO_LEASE_COMPONENT],
     [],
-    ['Cash Flows of Future Lease Payment', '', '', '', '', '', '', 'Right of Use Asset', '', '', '', '', '', 'Lease Liability'],
+    ['Cash Flows of Future Lease Payment', '', '', '', '', '', '', 'Right of Use Asset', '', '', '', '', '', 'Lease Liability', '', '', '', '', '', '', ''],
     [],
-    ['Payment Date', 'Base Rent', 'Other', 'Parking', 'Total Cash Flows', 'Lease Component', '', 'Date', 'Period', 'Asset - Beginning', 'Depreciation', 'Asset - Ending', '', 'Period', 'Liability - Beginning', 'Payment', 'Interest Expense', 'Liability - Ending']
+    ['Payment Date', 'Base Rent', 'Other', 'Parking', 'Total Cash Flows', 'Lease Component', '', 'Date', 'Period', 'Asset - Beginning', 'Depreciation', 'Asset - Ending', '', 'Period', 'Liability - Beginning', 'Payment', 'Interest Expense', 'Liability - Ending', '', '', '']
   ];
 
-  // Add data rows (all three tables side by side)
-  for (let i = 0; i < Math.max(cashFlowRows.length, rightOfUseAssetRows.length, leaseLiabilityRows.length); i++) {
+  // Add data rows (all tables side by side)
+  const maxRows = Math.max(cashFlowRows.length, rightOfUseAssetRows.length, leaseLiabilityRows.length);
+
+  for (let i = 0; i < maxRows; i++) {
     const row: any[] = [];
 
     // Cash flow columns
@@ -125,243 +157,74 @@ export const generatePVCalculation = (lease: PropertyLease): XLSX.WorkSheet => {
       row.push('', '', '', '', '');
     }
 
+    // Empty column separator
+    row.push('');
+
+
+    // Add opening summary table (first 3 rows)
+    if (i === 0) {
+      row.push('', 'short-term', openingSummary.shortTerm);
+    } else if (i === 1) {
+      row.push('', 'long-term', openingSummary.longTerm);
+    } else if (i === 2) {
+      row.push('Total Lease Liability at', formatDateToDate(openingDate), openingSummary.total);
+    } else if (i === 3) {
+      row.push('');
+    } else if (i === 4) {
+      row.push(`PV Interest Accretion:`, pvInterestAccretion, '');
+    } else if (i === 5) {
+      row.push('');
+    } else if (i === 6) {
+      // Start closing summary table
+      row.push('', 'short-term', closingSummary.shortTerm);
+    } else if (i === 7) {
+      row.push('', 'long-term', closingSummary.longTerm);
+    } else if (i === 8) {
+      row.push('Total Lease Liability at', formatDateToDate(closingDate), closingSummary.total);
+    } else if (i === 9) {
+      row.push('', '', '');
+    } else if (i === 10) {
+      row.push('', '', '');
+    } else if (i === 11) {
+      // Start lease payments due table
+      row.push(`Lease Payments Due ${formatDateToDate(closingDate)}`, '', '');
+    } else if (i === 12) {
+      row.push('', '', '');
+    } else if (i === 13) {
+      // Header row for lease payments due
+      row.push('', 'Lease Payments', 'Interest', 'NPV');
+    } else if (i === 14) {
+      row.push('', '', '', '');
+    } else if (i >= 15 && i < 15 + leasePaymentsDueRows.length) {
+      // Data rows for lease payments due
+      const dueRow = leasePaymentsDueRows[i - 15];
+      row.push(dueRow.period, dueRow.leasePayments, dueRow.interest, dueRow.npv);
+    } else {
+      row.push('', '', '', '');
+    }
+
     data.push(row);
   }
+
+  // Add spacing after the main tables and before journal table
+
+  // Add JOURNAL title
+  data.push(['', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', 'JOURNAL:', '', '']);
+
+  // Add journal table (15 rows x 3 columns starting at column T)
+  journalRows.forEach(journalRow => {
+    // Empty cells up to column T (19 empty columns A-S)
+    const row = Array(19).fill('');
+    // Add journal data in columns T, U, V
+    row.push(journalRow.col1, journalRow.col2, journalRow.col3);
+    data.push(row);
+  });
 
   // Create worksheet
   const worksheet = XLSX.utils.aoa_to_sheet(data);
 
   // Format the worksheet
-  formatPVWorksheet(worksheet, cashFlowRows.length, rightOfUseAssetRows.length, leaseLiabilityRows.length);
+  formatPVWorksheet(worksheet, cashFlowRows.length, rightOfUseAssetRows.length, leaseLiabilityRows.length, journalRows.length);
 
   return worksheet;
-};
-
-const generateCashFlowsOfFutureLeasePayment = (
-  filteredRows: PaymentRow[],
-  other: number,
-  parking: number,
-  allocationToLeaseComponent: number
-): CashFlowRow[] => {
-  return filteredRows.map(row => {
-    const baseRent = row.amount;
-    const totalCashFlows = baseRent + other + parking;
-    const leaseComponent = totalCashFlows * allocationToLeaseComponent;
-
-    return {
-      paymentDate: new Date(row.paymentDate),
-      baseRent,
-      other: '-',
-      parking: '-',
-      totalCashFlows,
-      leaseComponent
-    };
-  });
-};
-
-const generateRightOfUseAsset = (
-  filteredRows: PaymentRow[],
-  presentValue: number,
-  cashFlowRows: CashFlowRow[]
-): RightOfUseAssetRow[] => {
-  const rows: RightOfUseAssetRow[] = [];
-
-  // Count non-zero base rent rows for depreciation calculation
-  const nonZeroBaseRentCount = cashFlowRows.filter(cf => cf.baseRent > 0).length;
-
-  let previousDepreciation = 0;
-
-  filteredRows.forEach((row, index) => {
-    const period = index + 1;
-
-    // Asset Beginning: first row is present value, subsequent rows are previous asset ending
-    const assetBeginning = index === 0
-      ? presentValue
-      : rows[index - 1].assetEnding;
-
-    // Calculate Depreciation (negative value)
-    let depreciation: number;
-    if (index === 0) {
-      // First row: -J10/COUNTIF($B$10:$B$179,">0")
-      depreciation = (-assetBeginning / nonZeroBaseRentCount);
-    } else {
-      // Subsequent rows: IF(I11>=COUNTIF($B$10:$B$179,">0"),-L10,$K$10)
-      if (period >= nonZeroBaseRentCount) {
-        depreciation = (-rows[index - 1].assetEnding);
-      } else {
-        depreciation = previousDepreciation;
-      }
-    }
-
-    previousDepreciation = depreciation;
-
-    // Asset Ending: Asset Beginning + Depreciation (depreciation is negative)
-    const assetEnding = assetBeginning + depreciation;
-
-    rows.push({
-      date: formatDateShort(row.paymentDate),
-      period,
-      assetBeginning,
-      depreciation,
-      assetEnding
-    });
-  });
-
-  return rows;
-};
-
-const generateLeaseLiability = (
-  filteredRows: PaymentRow[],
-  presentValue: number,
-  cashFlowRows: CashFlowRow[],
-  borrowingRate: number,
-  paymentTiming: string
-): LeaseLiabilityRow[] => {
-  const rows: LeaseLiabilityRow[] = [];
-
-  filteredRows.forEach((row, index) => {
-    const period = formatDateShort(row.paymentDate);
-
-    // Liability Beginning: first row is present value, subsequent rows are previous liability ending
-    const liabilityBeginning = index === 0
-      ? presentValue
-      : rows[index - 1].liabilityEnding;
-
-    // Payment: Total Cash Flows from corresponding row (negative value)
-    const payment = (-cashFlowRows[index].totalCashFlows);
-
-    // Interest Expense: IF($F$4="Beginning",SUM(O10:P10)*$F$3/12,O10*$F$3/12)
-    let interestExpense: number;
-    if (paymentTiming === 'Beginning') {
-      interestExpense = (liabilityBeginning + payment) * borrowingRate / 12;
-    } else {
-      interestExpense = (liabilityBeginning * borrowingRate) / 12;
-    }
-
-    // Liability Ending: Liability Beginning + Payment + Interest Expense (payment is negative)
-    const liabilityEnding = liabilityBeginning + payment + interestExpense;
-
-    rows.push({
-      period,
-      liabilityBeginning,
-      payment,
-      interestExpense,
-      liabilityEnding
-    });
-  });
-
-  return rows;
-};
-
-const calculatePresentValue = (
-  cashFlows: number[],
-  monthlyRate: number,
-  paymentTiming: string
-): number => {
-  let npv = 0;
-
-  if (paymentTiming === 'Beginning') {
-    // First payment is at time 0 (not discounted)
-    npv = cashFlows[0];
-    // Remaining payments discounted from period 1 onwards
-    for (let i = 1; i < cashFlows.length; i++) {
-      npv += cashFlows[i] / Math.pow(1 + monthlyRate, i);
-    }
-  } else {
-    // All payments discounted from period 1 onwards
-    for (let i = 0; i < cashFlows.length; i++) {
-      npv += cashFlows[i] / Math.pow(1 + monthlyRate, i + 1);
-    }
-  }
-
-  return Math.round(npv * 100) / 100;
-};
-
-const formatDate = (date: Date): string => {
-  const d = String(date.getDate()).padStart(2, '0');
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const y = date.getFullYear();
-  return `${d}/${m}/${y}`;
-};
-
-const formatDateShort = (date: Date): string => {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const month = months[date.getMonth()];
-  const year = String(date.getFullYear()).slice(-2);
-  return `${month}-${year}`;
-};
-
-const formatPVWorksheet = (worksheet: XLSX.WorkSheet, cashFlowRowCount: number, assetRowCount: number, liabilityRowCount: number) => {
-  // Set column widths
-  worksheet['!cols'] = [
-    { wch: 40 },  // Column A (Property Address / Payment Date)
-    { wch: 15 },  // Column B (PV Value / Base Rent)
-    { wch: 10 },  // Column C (Other)
-    { wch: 10 },  // Column D (Parking)
-    { wch: 15 },  // Column E (Total Cash Flows)
-    { wch: 17 },  // Column F (Lease Component)
-    { wch: 6 },   // Column G (Separator)
-    { wch: 16 },  // Column H (Date)
-    { wch: 10 },  // Column I (Period)
-    { wch: 17 },  // Column J (Asset - Beginning)
-    { wch: 15 },  // Column K (Depreciation)
-    { wch: 17 },  // Column L (Asset - Ending)
-    { wch: 6 },   // Column M (Separator)
-    { wch: 12 },  // Column N (Period)
-    { wch: 17 },  // Column O (Liability - Beginning)
-    { wch: 15 },  // Column P (Payment)
-    { wch: 17 },  // Column Q (Interest Expense)
-    { wch: 17 }   // Column R (Liability - Ending)
-  ];
-
-  // Format Present Value in header (row 1, column B - cell B2)
-  const pvCell = XLSX.utils.encode_cell({ r: 1, c: 1 });
-  if (worksheet[pvCell] && typeof worksheet[pvCell].v === 'number') {
-    worksheet[pvCell].z = '#,##0.00';
-  }
-
-  const dataStartRow = 9;
-
-  // Format dates in column A (Payment Date)
-  for (let row = dataStartRow; row < dataStartRow + cashFlowRowCount; row++) {
-    const cellAddress = XLSX.utils.encode_cell({ r: row, c: 0 });
-    if (worksheet[cellAddress]) {
-      worksheet[cellAddress].z = 'dd/mm/yyyy';
-    }
-  }
-
-  // Format currency columns in Cash Flows table (Base Rent, Total Cash Flows, Lease Component)
-  const cashFlowCurrencyColumns = [1, 4, 5]; // B, E, F
-  for (let row = dataStartRow; row < dataStartRow + cashFlowRowCount; row++) {
-    cashFlowCurrencyColumns.forEach(col => {
-      const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-      if (worksheet[cellAddress] && typeof worksheet[cellAddress].v === 'number') {
-        worksheet[cellAddress].z = '#,##0.00';
-      }
-    });
-  }
-
-  // Format currency columns in Right of Use Asset table
-  // Asset - Beginning, Depreciation, and Asset - Ending with standard currency format
-  const assetCurrencyColumns = [9, 10, 11]; // J, K, L
-  for (let row = dataStartRow; row < dataStartRow + assetRowCount; row++) {
-    assetCurrencyColumns.forEach(col => {
-      const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-      if (worksheet[cellAddress] && typeof worksheet[cellAddress].v === 'number') {
-        worksheet[cellAddress].z = '#,##0.00';
-      }
-    });
-  }
-
-  // Format currency columns in Lease Liability table
-  // All columns with standard currency format
-  const liabilityCurrencyColumns = [14, 15, 16, 17]; // O, P, Q, R
-  for (let row = dataStartRow; row < dataStartRow + liabilityRowCount; row++) {
-    liabilityCurrencyColumns.forEach(col => {
-      const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
-      if (worksheet[cellAddress] && typeof worksheet[cellAddress].v === 'number') {
-        worksheet[cellAddress].z = '#,##0.00';
-      }
-    });
-  }
 };
