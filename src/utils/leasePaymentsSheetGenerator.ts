@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import { PropertyLease } from '../types/Lease';
 import { PaymentRow, calculateXNPV } from './excelHelper';
 import { formatWorksheet } from './styleExcel';
+import { formatDate, formatCurrency2 } from './helper';
 
 export const generateLeasePayments = (lease: PropertyLease): XLSX.WorkSheet => {
   const rows = generatePaymentRows(lease);
@@ -14,16 +15,16 @@ export const generateLeasePayments = (lease: PropertyLease): XLSX.WorkSheet => {
   // Create data array for worksheet with header section
   const data: any[][] = [
     ['Property Address:', lease.propertyAddress],
-    ['Commencement Date:', lease.commencementDate],
-    ['Expiry Date:', lease.expiryDate],
-    ['Options:', lease.options],
-    ['Original Annual Rent:', originalAnnualRent],
-    ['Original Monthly Payment:', originalMonthlyPayment],
+    ['Commencement Date:', formatDate(lease.commencementDate)],
+    ['Expiry Date:', formatDate(lease.expiryDate)],
+    ['Options:', `${lease.options} years`],
+    ['Original Annual Rent:', formatCurrency2(originalAnnualRent)],
+    ['Original Monthly Payment:', formatCurrency2(originalMonthlyPayment)],
     [],
     ['RBA CPI Rate:', `${lease.rbaCpiRate}%`],
     ['Fixed Increment Rate:', `${lease.fixedIncrementRate}%`],
     ['Borrowing Rate:', `${lease.borrowingRate}%`],
-    ['NPV:', xnpv],
+    ['NPV:', formatCurrency2(xnpv)],
     [],
     [],
     ['Payment', 'Lease Year', 'Payment Date', 'Amount', 'Note']
@@ -57,12 +58,8 @@ export const generatePaymentRows = (lease: PropertyLease): PaymentRow[] => {
   finalDate.setFullYear(finalDate.getFullYear() + optionsYears);
 
   const originalMonthlyPayment = Math.round((parseFloat(lease.annualRent) / 12) * 100) / 100;
-  console.log(originalMonthlyPayment);
   let currentAmount = originalMonthlyPayment;
   let currentDate = new Date(commencementDate);
-
-  // Set to first day of month
-  currentDate.setDate(1);
 
   let paymentCounter = 1;
   let leaseYear = 1;
@@ -74,7 +71,27 @@ export const generatePaymentRows = (lease: PropertyLease): PaymentRow[] => {
     incrementMethods[parseInt(yearStr)] = lease.incrementMethods[parseInt(yearStr)];
   });
 
-  while (currentDate <= finalDate) {
+  // Apply increment method for Year 1 on the first payment
+  const year1Method = incrementMethods[1];
+  let year1Note = '';
+
+  if (year1Method === 'Fixed') {
+    const fixedRate = parseFloat(lease.fixedIncrementRate) / 100;
+    currentAmount = currentAmount * (1 + fixedRate);
+    year1Note = `Fixed Increment Rate`;
+  } else if (year1Method === 'CPI') {
+    const cpiRate = parseFloat(lease.rbaCpiRate) / 100;
+    currentAmount = currentAmount * (1 + cpiRate);
+    year1Note = `RBA CPI Rate`;
+  } else if (year1Method === 'Market') {
+    currentAmount = parseFloat(lease.overrideAmounts[1] || '0');
+    year1Note = `Market Review`;
+  } else if (year1Method === 'None') {
+    // No increment applied
+    year1Note = `No Increment`;
+  }
+
+  while (currentDate < finalDate) {
     let note = '';
 
     // Check if we're starting a new lease year (every 12 months)
@@ -97,7 +114,15 @@ export const generatePaymentRows = (lease: PropertyLease): PaymentRow[] => {
         const yearNum = leaseYear;
         currentAmount = parseFloat(lease.overrideAmounts[yearNum] || '0');
         note = `Market Review`;
+      } else if (incrementMethod === 'None') {
+        // No increment applied
+        note = `None`;
       }
+    }
+
+    // Add year 1 note only to the first payment
+    if (paymentCounter === 1 && year1Note) {
+      note = year1Note;
     }
 
     rows.push({
