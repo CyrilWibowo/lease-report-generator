@@ -12,7 +12,7 @@ export const formatWorksheet = (worksheet: XLSX.WorkSheet, rows: PaymentRow[]) =
   }
 
   // Format amounts as currency
-  for (let row = 1; row <= rows.length + 3; row++) {
+  for (let row = 1; row <= rows.length + 15; row++) {
     const cellAddress = XLSX.utils.encode_cell({ r: row, c: 3 }); // Column D (Amount)
     if (worksheet[cellAddress] && typeof worksheet[cellAddress].v === 'number') {
       worksheet[cellAddress].z = '#,##0.00'; // Currency format
@@ -25,7 +25,7 @@ export const formatWorksheet = (worksheet: XLSX.WorkSheet, rows: PaymentRow[]) =
 export const formatPaymentTable = (worksheet: XLSX.WorkSheet) => {
   // Set column widths
   worksheet['!cols'] = [
-    { wch: 10 },  // Payment
+    { wch: 23 },  // Payment
     { wch: 12 },  // Lease Year
     { wch: 13 },  // Payment Date
     { wch: 12 },  // Amount
