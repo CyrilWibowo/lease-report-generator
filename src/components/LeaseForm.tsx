@@ -138,6 +138,33 @@ const LeaseForm: React.FC<LeaseFormProps> = ({
             </div>
 
             <div className="form-group">
+              <label>Engine Number *</label>
+              {errors.engineNumber && <span className="error-text">This field is required</span>}
+              <input
+                type="text"
+                className={errors.engineNumber ? 'error' : ''}
+                value={(lease as MotorVehicleLease).engineNumber}
+                onChange={(e) => onInputChange('engineNumber', e.target.value)}
+                placeholder="Enter Engine Number"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Vehicle Type *</label>
+              {errors.vehicleType && <span className="error-text">This field is required</span>}
+              <select
+                className={errors.vehicleType ? 'error' : ''}
+                value={(lease as MotorVehicleLease).vehicleType}
+                onChange={(e) => onInputChange('vehicleType', e.target.value)}
+              >
+                <option value="">Select vehicle type...</option>
+                <option value="Ute">Ute</option>
+                <option value="Wagon">Wagon</option>
+                <option value="Forklift">Forklift</option>
+              </select>
+            </div>
+
+            <div className="form-group">
               <label>Delivery Date *</label>
               {errors.deliveryDate && <span className="error-text">This field is required</span>}
               <input
