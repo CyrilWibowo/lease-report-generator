@@ -31,9 +31,18 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
       if (propertyLease.commencementDate && propertyLease.expiryDate) {
         const start = new Date(propertyLease.commencementDate);
         const end = new Date(propertyLease.expiryDate);
-        const yearsDiff = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
+
+        // Calculate total months from commencement to expiry
+        const months = (end.getFullYear() - start.getFullYear()) * 12 +
+                      (end.getMonth() - start.getMonth());
+
+        // Only add 1 if the end date day is AFTER the start date day
+        const adjustedMonths = end.getDate() > start.getDate() ? months + 1 : months;
+
         const optionsYears = parseInt(propertyLease.options) || 0;
-        const total = Math.floor(yearsDiff + optionsYears);
+        const totalMonths = adjustedMonths + (optionsYears * 12);
+        const total = Math.ceil(totalMonths / 12);
+
         setCommittedYears(total > 0 ? total : 0);
       } else {
         setCommittedYears(0);
@@ -43,8 +52,15 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
       if (mvLease.deliveryDate && mvLease.expiryDate) {
         const start = new Date(mvLease.deliveryDate);
         const end = new Date(mvLease.expiryDate);
-        const yearsDiff = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365));
-        const total = Math.floor(yearsDiff);
+
+        // Calculate total months
+        const months = (end.getFullYear() - start.getFullYear()) * 12 +
+                      (end.getMonth() - start.getMonth());
+
+        // Only add 1 if the end date day is AFTER the start date day
+        const adjustedMonths = end.getDate() > start.getDate() ? months + 1 : months;
+        const total = Math.ceil(adjustedMonths / 12);
+
         setCommittedYears(total > 0 ? total : 0);
       } else {
         setCommittedYears(0);
@@ -77,14 +93,12 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
         id: baseId,
         type: 'Motor Vehicle',
         lessor: '',
-        entityName: '',
         description: '',
         vinSerialNo: '',
         regoNo: '',
         deliveryDate: '',
         expiryDate: '',
         annualRent: '',
-        rbaCpiRate: '',
         borrowingRate: '',
         incrementMethods: {},
         overrideAmounts: {},
@@ -136,10 +150,6 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
       newErrors.annualRent = true;
       isValid = false;
     }
-    if (!lease.rbaCpiRate.trim()) {
-      newErrors.rbaCpiRate = true;
-      isValid = false;
-    }
     if (!lease.borrowingRate.trim()) {
       newErrors.borrowingRate = true;
       isValid = false;
@@ -167,12 +177,26 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
         newErrors.fixedIncrementRate = true;
         isValid = false;
       }
-    } else {
-      const mvLease = lease as MotorVehicleLease;
-      if (!mvLease.entityName?.trim()) {
-        newErrors.entityName = true;
+      if (!propertyLease.rbaCpiRate.trim()) {
+        newErrors.rbaCpiRate = true;
         isValid = false;
       }
+
+      // Validate increment methods starting from year 1
+      if (committedYears >= 1) {
+        for (let year = 1; year <= committedYears; year++) {
+          if (!propertyLease.incrementMethods[year]) {
+            newErrors[`incrementMethod_${year}`] = true;
+            isValid = false;
+          }
+          if (propertyLease.incrementMethods[year] === 'Market' && !propertyLease.overrideAmounts[year]?.trim()) {
+            newErrors[`overrideAmount_${year}`] = true;
+            isValid = false;
+          }
+        }
+      }
+    } else {
+      const mvLease = lease as MotorVehicleLease;
       if (!mvLease.description?.trim()) {
         newErrors.description = true;
         isValid = false;
@@ -192,19 +216,6 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
       if (!mvLease.expiryDate) {
         newErrors.expiryDate = true;
         isValid = false;
-      }
-    }
-
-    if (committedYears > 1) {
-      for (let year = 2; year <= committedYears; year++) {
-        if (!lease.incrementMethods[year]) {
-          newErrors[`incrementMethod_${year}`] = true;
-          isValid = false;
-        }
-        if (lease.incrementMethods[year] === 'Market' && !lease.overrideAmounts[year]?.trim()) {
-          newErrors[`overrideAmount_${year}`] = true;
-          isValid = false;
-        }
       }
     }
 
