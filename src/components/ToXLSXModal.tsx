@@ -185,7 +185,7 @@ const ToXLSXModal: React.FC<ToXLSXModalProps> = ({ onClose, onGenerate }) => {
               onChange={(e) => handleExtensionToggle(e.target.checked)}
               className="xlsx-checkbox"
             />
-            Is Extension (all opening balances will be 0)
+            Is Extension
           </label>
         </div>
 
