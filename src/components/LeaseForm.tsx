@@ -282,7 +282,7 @@ const LeaseForm: React.FC<LeaseFormProps> = ({
                   >
                     <option value="">Select method...</option>
                     <option value="Fixed">Fix Rate</option>
-                    <option value="Market">Market/Override</option>
+                    <option value="Market">Market</option>
                     <option value="CPI">CPI</option>
                     <option value="None">None</option>
                   </select>
