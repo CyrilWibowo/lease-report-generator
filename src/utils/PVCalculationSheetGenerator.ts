@@ -2,7 +2,7 @@ import * as XLSX from 'xlsx';
 import { PropertyLease } from '../types/Lease';
 import { generatePaymentRows } from './leasePaymentsSheetGenerator';
 import { XLSXGenerationParams } from '../components/ToXLSXModal';
-import { formatDate, formatDateToDate } from './helper';
+import { formatDateToDate } from './helper';
 import {
   calculatePresentValue,
   generateCashFlowsOfFutureLeasePayment,
@@ -12,6 +12,7 @@ import {
   calculatePVInterestAccretion,
   calculateLeasePaymentsDue,
   generateJournalTable,
+  generateBalanceSummaryTable,
   getNextYearEnd
 } from './pvCalculationHelpers';
 import { formatPVWorksheet } from './pvWorksheetFormatter';
@@ -238,11 +239,51 @@ export const generatePVCalculation = (lease: PropertyLease, params: XLSXGenerati
     data.push(row);
   });
 
+  // Generate balance summary table (8 rows x 4 columns)
+  const openingBalanceRightToUseAssets = typeof params.openingBalance.rightToUseAssets === 'number'
+    ? params.openingBalance.rightToUseAssets
+    : 0;
+  const openingBalanceDepreciationExpense = typeof params.openingBalance.depreciationExpense === 'number'
+    ? params.openingBalance.depreciationExpense
+    : 0;
+  const openingBalanceRentExpense = typeof params.openingBalance.rentExpense === 'number'
+    ? params.openingBalance.rentExpense
+    : 0;
+
+  const balanceSummaryRows = generateBalanceSummaryTable({
+    presentValue,
+    openingDate,
+    closingDate,
+    expiryDate,
+    openingBalances: {
+      rightToUseAssets: openingBalanceRightToUseAssets,
+      accDeprRightToUseAssets: openingBalanceAccDeprRightToUseAssets,
+      leaseLiabilityCurrent: openingBalanceLeaseLiabilityCurrent,
+      leaseLiabilityNonCurrent: openingBalanceLeaseLiabilityNonCurrent,
+      depreciationExpense: openingBalanceDepreciationExpense,
+      interestExpenseRent: openingBalanceInterestExpenseRent,
+      rentExpense: openingBalanceRentExpense
+    },
+    journalRows
+  });
+
+  // Add empty row before balance summary table
+  data.push([]);
+
+  // Add balance summary table (8 rows x 4 columns starting at column T)
+  balanceSummaryRows.forEach(summaryRow => {
+    // Empty cells up to column T (19 empty columns A-S)
+    const row = Array(19).fill('');
+    // Add balance summary data in columns T, U, V, W
+    row.push(summaryRow[0], summaryRow[1], summaryRow[2], summaryRow[3]);
+    data.push(row);
+  });
+
   // Create worksheet
   const worksheet = XLSX.utils.aoa_to_sheet(data);
 
   // Format the worksheet
-  formatPVWorksheet(worksheet, cashFlowRows.length, rightOfUseAssetRows.length, leaseLiabilityRows.length, journalRows.length);
+  formatPVWorksheet(worksheet, cashFlowRows.length, rightOfUseAssetRows.length, leaseLiabilityRows.length, journalRows.length, balanceSummaryRows.length);
 
   return worksheet;
 };
