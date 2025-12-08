@@ -451,7 +451,7 @@ export const generateJournalTable = (
         depreciationTotal += rightOfUseAssetRows[index].depreciation;
       }
     });
-    row13Value = depreciationTotal;
+    row13Value = -depreciationTotal;
   }
   row11Value = -row13Value;
 
@@ -586,8 +586,8 @@ export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (stri
   rows.push([
     '16405 Acc.Depr. Right to Use the Assets',
     openingBalances.accDeprRightToUseAssets,
-    journalRow13Value,
-    openingBalances.accDeprRightToUseAssets + journalRow13Value
+    -journalRow13Value,
+    openingBalances.accDeprRightToUseAssets - journalRow13Value
   ]);
 
   // Row 3: 22005 Lease Liability - Current
@@ -597,7 +597,7 @@ export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (stri
     '22005 Lease Liability - Current',
     openingBalances.leaseLiabilityCurrent,
     row3Movement,
-    openingBalances.leaseLiabilityCurrent + journalRow10Value
+    openingBalances.leaseLiabilityCurrent + row3Movement
   ]);
 
   // Row 4: 22010 Lease Liability - Non Current
@@ -607,7 +607,7 @@ export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (stri
     '22010 Lease Liability - Non Current',
     openingBalances.leaseLiabilityNonCurrent,
     row4Movement,
-    openingBalances.leaseLiabilityNonCurrent + journalRow9Value
+    openingBalances.leaseLiabilityNonCurrent + row4Movement
   ]);
 
   // Row 5: 60080 Depreciation Expense
@@ -615,8 +615,8 @@ export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (stri
   rows.push([
     '60080 Depreciation Expense',
     openingBalances.depreciationExpense,
-    journalRow11Value,
-    openingBalances.depreciationExpense + journalRow11Value
+    -journalRow11Value,
+    openingBalances.depreciationExpense - journalRow11Value
   ]);
 
   // Row 6: 60275 Interest Expense Rent
@@ -629,10 +629,10 @@ export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (stri
   ]);
 
   const rentExpenseMovement = -(
-    rightToUseAssetsMovement +
+    rightToUseAssetsMovement -
     journalRow13Value +
     row3Movement +
-    row4Movement +
+    row4Movement -
     journalRow11Value +
     journalRow12Value
   );
