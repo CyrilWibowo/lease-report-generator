@@ -34,3 +34,13 @@ export const normalizeDate = (date: Date) => {
   d.setHours(0, 0, 0, 0);
   return d;
 };
+
+export const generateLeaseId = (type: 'Property' | 'Motor Vehicle'): string => {
+  const prefix = type === 'Property' ? 'P' : 'M';
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let id = '';
+  for (let i = 0; i < 5; i++) {
+    id += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return prefix + id;
+};
