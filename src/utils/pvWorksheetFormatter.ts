@@ -5,7 +5,8 @@ export const formatPVWorksheet = (
   cashFlowRowCount: number,
   assetRowCount: number,
   liabilityRowCount: number,
-  journalRowCount: number
+  journalRowCount: number,
+  balanceSummaryRowCount: number = 8
 ) => {
   // Set column widths
   worksheet['!cols'] = [
@@ -125,5 +126,21 @@ export const formatPVWorksheet = (
     if (worksheet[cellAddress] && typeof worksheet[cellAddress].v === 'number') {
       worksheet[cellAddress].z = '#,##0.00';
     }
+  }
+
+  // Format currency in Balance Summary table (columns U, V, W - Opening Balance, Movement, Closing Balance)
+  // Balance summary starts after journal + 1 empty row
+  const balanceSummaryStartRow = journalStartRow + journalRowCount - 1;
+
+  // Skip header row (row 0), format data rows (rows 1-7)
+  for (let i = 1; i < balanceSummaryRowCount; i++) {
+    const row = balanceSummaryStartRow + i;
+    // Columns U, V, W (Opening Balance, Movement, Closing Balance)
+    [20, 21, 22].forEach(col => {
+      const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+      if (worksheet[cellAddress] && typeof worksheet[cellAddress].v === 'number') {
+        worksheet[cellAddress].z = '#,##0.00';
+      }
+    });
   }
 };
