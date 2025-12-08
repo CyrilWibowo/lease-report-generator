@@ -99,13 +99,19 @@ export const generatePVCalculation = (lease: PropertyLease, params: XLSXGenerati
   );
 
   // Generate journal table
+  const expiryDate = new Date(lease.expiryDate);
+  const openingBalanceLeaseLiabilityNonCurrent = typeof params.openingBalance.leaseLiabilityNonCurrent === 'number'
+    ? params.openingBalance.leaseLiabilityNonCurrent
+    : 0;
   const journalRows = generateJournalTable(
     presentValue,
     leaseLiabilityRows,
     rightOfUseAssetRows,
     allPaymentRows,
     openingDate,
-    closingDate
+    closingDate,
+    expiryDate,
+    openingBalanceLeaseLiabilityNonCurrent
   );
 
   // Build the data array with header
