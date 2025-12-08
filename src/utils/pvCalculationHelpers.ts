@@ -45,6 +45,13 @@ export interface JournalRow {
   col3: number | string;
 }
 
+export interface BalanceSummaryRow {
+  accountCode: string;
+  openingBalance: number;
+  movement: number;
+  closingBalance: number;
+}
+
 export const calculatePresentValue = (
   cashFlows: number[],
   monthlyRate: number,
@@ -462,6 +469,177 @@ export const generateJournalTable = (
   rows.push({ col1: '', col2: `(Journal at ${formatDateToDateShort(closingDate)})`, col3: '' }); // Row 15
 
   return rows;
+};
+
+export interface BalanceSummaryParams {
+  presentValue: number;
+  openingDate: Date;
+  closingDate: Date;
+  expiryDate: Date;
+  openingBalances: {
+    rightToUseAssets: number;
+    accDeprRightToUseAssets: number;
+    leaseLiabilityCurrent: number;
+    leaseLiabilityNonCurrent: number;
+    depreciationExpense: number;
+    interestExpenseRent: number;
+    rentExpense: number;
+  };
+  journalRows: JournalRow[];
+}
+
+/**
+ * Generates an 8x4 balance summary table with account codes, opening balances,
+ * movements, and closing balances.
+ *
+ * The table structure:
+ * - Row 0: Headers
+ * - Row 1: 16400 Right to Use the Assets
+ * - Row 2: 16405 Acc.Depr. Right to Use the Assets
+ * - Row 3: 22005 Lease Liability - Current
+ * - Row 4: 22010 Lease Liability - Non Current
+ * - Row 5: 60080 Depreciation Expense
+ * - Row 6: 60275 Interest Expense Rent
+ * - Row 7: 60270 Rent Expense
+ */
+export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (string | number)[][] => {
+  const {
+    presentValue,
+    openingDate,
+    closingDate,
+    expiryDate,
+    openingBalances,
+    journalRows
+  } = params;
+
+  const normalizedClosing = normalizeDate(closingDate);
+  const normalizedExpiry = normalizeDate(expiryDate);
+
+  // Format date strings for headers
+  const lastYear = openingDate.getFullYear() - 1;
+  const thisYear = closingDate.getFullYear();
+  const closingDateStr = formatDateForBalanceSummary(closingDate);
+
+  // Extract journal row values (0-indexed)
+  // Journal row 9 = index 8: Lease Liability - Non-Current
+  // Journal row 10 = index 9: Lease Liability - Current
+  // Journal row 11 = index 10: Depreciation Expense
+  // Journal row 12 = index 11: Interest Expense Rent
+  // Journal row 13 = index 12: Acc.Depr Right to Use Assets
+  const journalRow9Value = typeof journalRows[8]?.col3 === 'number' ? journalRows[8].col3 : 0;
+  const journalRow10Value = typeof journalRows[9]?.col3 === 'number' ? journalRows[9].col3 : 0;
+  const journalRow11Value = typeof journalRows[10]?.col3 === 'number' ? journalRows[10].col3 : 0;
+  const journalRow12Value = typeof journalRows[11]?.col3 === 'number' ? journalRows[11].col3 : 0;
+  const journalRow13Value = typeof journalRows[12]?.col3 === 'number' ? journalRows[12].col3 : 0;
+
+  // Calculate Right to Use Assets movement
+  // =IF(H126=0,$F$2,IF($F$6>='Lease Payments'!$C$6,$F$2-$H$126,0))
+  // If opening balance right to use assets = 0, movement = presentValue
+  // Else if closing date >= expiry date, movement = presentValue - opening balance
+  // Else movement = 0
+  let rightToUseAssetsMovement: number;
+  if (openingBalances.rightToUseAssets === 0) {
+    rightToUseAssetsMovement = presentValue;
+  } else if (normalizedClosing >= normalizedExpiry) {
+    rightToUseAssetsMovement = presentValue - openingBalances.rightToUseAssets;
+  } else {
+    rightToUseAssetsMovement = 0;
+  }
+
+  // Calculate Rent Expense movement: -(sum of opening balances in column 2)
+  // This is the negative sum of all opening balances
+
+
+  // Build the table rows
+  const rows: (string | number)[][] = [];
+
+  // Row 0: Header row
+  rows.push([
+    '',
+    `Opening Balance 31/12/${lastYear}`,
+    `Movement FY ${thisYear}`,
+    `Closing Balance ${closingDateStr}`
+  ]);
+
+  // Row 1: 16400 Right to Use the Assets
+  rows.push([
+    '16400 Right to Use the Assets',
+    openingBalances.rightToUseAssets,
+    rightToUseAssetsMovement,
+    openingBalances.rightToUseAssets + rightToUseAssetsMovement
+  ]);
+
+  // Row 2: 16405 Acc.Depr. Right to Use the Assets
+  // Movement = journal row 13 value
+  rows.push([
+    '16405 Acc.Depr. Right to Use the Assets',
+    openingBalances.accDeprRightToUseAssets,
+    journalRow13Value,
+    openingBalances.accDeprRightToUseAssets + journalRow13Value
+  ]);
+
+  // Row 3: 22005 Lease Liability - Current
+  // Movement = journal row 10 value
+  rows.push([
+    '22005 Lease Liability - Current',
+    openingBalances.leaseLiabilityCurrent,
+    journalRow10Value,
+    openingBalances.leaseLiabilityCurrent + journalRow10Value
+  ]);
+
+  // Row 4: 22010 Lease Liability - Non Current
+  // Movement = journal row 9 value
+  rows.push([
+    '22010 Lease Liability - Non Current',
+    openingBalances.leaseLiabilityNonCurrent,
+    journalRow9Value,
+    openingBalances.leaseLiabilityNonCurrent + journalRow9Value
+  ]);
+
+  // Row 5: 60080 Depreciation Expense
+  // Movement = journal row 11 value
+  rows.push([
+    '60080 Depreciation Expense',
+    openingBalances.depreciationExpense,
+    journalRow11Value,
+    openingBalances.depreciationExpense + journalRow11Value
+  ]);
+
+  // Row 6: 60275 Interest Expense Rent
+  // Movement = journal row 12 value
+  rows.push([
+    '60275 Interest Expense Rent',
+    openingBalances.interestExpenseRent,
+    journalRow12Value,
+    openingBalances.interestExpenseRent + journalRow12Value
+  ]);
+
+  const rentExpenseMovement = -(
+    rightToUseAssetsMovement +
+    journalRow13Value +
+    journalRow10Value +
+    journalRow9Value +
+    journalRow11Value +
+    journalRow12Value
+  );
+
+  // Row 7: 60270 Rent Expense
+  // Movement = -(sum of opening balances column)
+  rows.push([
+    '60270 Rent Expense',
+    openingBalances.rentExpense,
+    rentExpenseMovement,
+    openingBalances.rentExpense + rentExpenseMovement
+  ]);
+
+  return rows;
+};
+
+const formatDateForBalanceSummary = (date: Date): string => {
+  const d = String(date.getDate()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const y = date.getFullYear();
+  return `${d}/${m}/${y}`;
 };
 
 export const getNextYearEnd = (date: Date): Date => {
