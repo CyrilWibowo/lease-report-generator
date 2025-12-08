@@ -4,6 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Lease, PropertyLease, MotorVehicleLease } from '../types/Lease';
+import { generateLeaseId } from '../utils/helper';
 import './EditLeaseModal.css';
 
 interface EditLeaseModalProps {
@@ -210,6 +211,7 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
     const copiedLease: Lease = {
       ...editedLease,
       id: crypto.randomUUID(),
+      leaseId: generateLeaseId(editedLease.type),
     };
     onCopy(copiedLease);
     setShowCopyConfirm(false);
@@ -479,7 +481,7 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
                       >
                         <option value="">Select method...</option>
                         <option value="Fixed">Fix Rate</option>
-                        <option value="Market">Market/Override</option>
+                        <option value="Market">Market</option>
                         <option value="CPI">CPI</option>
                         <option value="None">None</option>
                       </select>
