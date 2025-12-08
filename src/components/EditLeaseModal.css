@@ -158,6 +158,30 @@
   background-color: #c82333;
 }
 
+.copy-button {
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 6px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.copy-button:hover {
+  background-color: #138496;
+}
+
+.left-button-group {
+  display: flex;
+  gap: 12px;
+}
+
 .button-group {
   display: flex;
   gap: 20px;
@@ -264,4 +288,19 @@
 
 .confirm-delete-button:hover {
   background-color: #c82333;
+}
+
+.confirm-copy-button {
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.confirm-copy-button:hover {
+  background-color: #138496;
 }

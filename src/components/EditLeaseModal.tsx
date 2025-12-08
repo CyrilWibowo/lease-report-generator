@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Lease, PropertyLease, MotorVehicleLease } from '../types/Lease';
 import './EditLeaseModal.css';
 
@@ -10,13 +11,15 @@ interface EditLeaseModalProps {
   onClose: () => void;
   onSave: (lease: Lease) => void;
   onDelete: (leaseId: string) => void;
+  onCopy: (lease: Lease) => void;
 }
 
-const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave, onDelete }) => {
+const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave, onDelete, onCopy }) => {
   const [editedLease, setEditedLease] = useState<Lease>(lease);
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
   const [committedYears, setCommittedYears] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showCopyConfirm, setShowCopyConfirm] = useState(false);
 
   useEffect(() => {
     calculateCommittedYears();
@@ -192,6 +195,20 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
   const confirmDelete = () => {
     onDelete(lease.id);
     setShowDeleteConfirm(false);
+    onClose();
+  };
+
+  const handleCopy = () => {
+    setShowCopyConfirm(true);
+  };
+
+  const confirmCopy = () => {
+    const copiedLease: Lease = {
+      ...editedLease,
+      id: crypto.randomUUID(),
+    };
+    onCopy(copiedLease);
+    setShowCopyConfirm(false);
     onClose();
   };
 
@@ -473,9 +490,14 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
           )}
 
           <div className="modal-actions">
-            <button className="delete-button" onClick={handleDelete}>
-              <DeleteIcon /> Delete Lease
-            </button>
+            <div className="left-button-group">
+              <button className="delete-button" onClick={handleDelete}>
+                <DeleteIcon /> Delete
+              </button>
+              <button className="copy-button" onClick={handleCopy}>
+                <ContentCopyIcon /> Copy
+              </button>
+            </div>
             <div className="button-group">
               <button className="cancel-button" onClick={onClose}>Cancel</button>
               <button className="save-button" onClick={handleSubmit}>Save Changes</button>
@@ -497,6 +519,25 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
               </button>
               <button className="confirm-delete-button" onClick={confirmDelete}>
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCopyConfirm && (
+        <div className="confirm-overlay" onClick={() => setShowCopyConfirm(false)}>
+          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+            <h3 className="confirm-title">Copy Lease?</h3>
+            <p className="confirm-text">
+              This will create a duplicate of this lease with all the same details. Continue?
+            </p>
+            <div className="confirm-actions">
+              <button className="confirm-cancel-button" onClick={() => setShowCopyConfirm(false)}>
+                Cancel
+              </button>
+              <button className="confirm-copy-button" onClick={confirmCopy}>
+                Copy
               </button>
             </div>
           </div>
