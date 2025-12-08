@@ -61,6 +61,20 @@
   margin-bottom: 30px;
 }
 
+.xlsx-section-header {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.xlsx-section-title {
+  margin: 0;
+  color: #333;
+  font-size: 20px;
+  font-weight: 600;
+}
+
 .xlsx-form-group {
   display: flex;
   flex-direction: column;
