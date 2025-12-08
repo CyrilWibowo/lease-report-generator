@@ -339,18 +339,26 @@ export const generateJournalTable = (
   const normalizedExpiry = normalizeDate(expiryDate);
 
   // Right to Use The Assets - Lease Liability - Current
-  // Calculate row 4: sum of all payments before opening date (not including)
-  let paymentsBeforeOpening = 0;
-  allPaymentRows.forEach((row, index) => {
-    const paymentDate = normalizeDate(new Date(row.paymentDate));
-    if (paymentDate < normalizedOpening && leaseLiabilityRows[index]) {
-      paymentsBeforeOpening += leaseLiabilityRows[index].payment + leaseLiabilityRows[index].interestExpense;
-    }
-  });
+  // Calculate row 4: sum of payments from the first two calendar years
+  // e.g., if lease starts in May-22, sum all payments from 2022 and 2023 (up to Jan of 3rd year)
+  let paymentsFirstTwoYears = 0;
+  if (allPaymentRows.length > 0) {
+    const firstPaymentDate = normalizeDate(new Date(allPaymentRows[0].paymentDate));
+    const startYear = firstPaymentDate.getFullYear();
+    // End of second year is Jan 1 of the third year (exclusive)
+    const endOfSecondYear = new Date(startYear + 2, 0, 1); // Jan 1 of year+2
+
+    allPaymentRows.forEach((row, index) => {
+      const paymentDate = normalizeDate(new Date(row.paymentDate));
+      if (paymentDate < endOfSecondYear && leaseLiabilityRows[index]) {
+        paymentsFirstTwoYears += leaseLiabilityRows[index].payment + leaseLiabilityRows[index].interestExpense;
+      }
+    });
+  }
 
   // Right to Use The Assets - Lease Liability - Non Current
   // Calculate row 5: -(row3 + row4)
-  const row5Value = -(presentValue + paymentsBeforeOpening);
+  const row5Value = -(presentValue + paymentsFirstTwoYears);
 
   // Lease Liability - Non Current
   // Calculate row 9: =IF(H129=0,0,IF($F$6>='Lease Payments'!$C$6,-$H$129,-SUM($P$10:$Q$17)))
@@ -455,7 +463,7 @@ export const generateJournalTable = (
   rows.push({ col1: '', col2: '', col3: '' }); // Row 1
   rows.push({ col1: '', col2: '', col3: '' }); // Row 2
   rows.push({ col1: '164000', col2: 'Right to Use the Assets', col3: presentValue }); // Row 3
-  rows.push({ col1: '22005', col2: '   Lease Liability - Current', col3: paymentsBeforeOpening }); // Row 4
+  rows.push({ col1: '22005', col2: '   Lease Liability - Current', col3: paymentsFirstTwoYears }); // Row 4
   rows.push({ col1: '22010', col2: '   Lease Liability - Non-Current', col3: row5Value }); // Row 5
   rows.push({ col1: '', col2: '', col3: '' }); // Row 6
   rows.push({ col1: '', col2: '', col3: '' }); // Row 7
