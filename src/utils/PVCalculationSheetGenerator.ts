@@ -103,6 +103,12 @@ export const generatePVCalculation = (lease: PropertyLease, params: XLSXGenerati
   const openingBalanceLeaseLiabilityNonCurrent = typeof params.openingBalance.leaseLiabilityNonCurrent === 'number'
     ? params.openingBalance.leaseLiabilityNonCurrent
     : 0;
+  const openingBalanceLeaseLiabilityCurrent = typeof params.openingBalance.leaseLiabilityCurrent === 'number'
+    ? params.openingBalance.leaseLiabilityCurrent
+    : 0;
+  const openingBalanceAccDeprRightToUseAssets = typeof params.openingBalance.accDeprRightToUseAssets === 'number'
+    ? params.openingBalance.accDeprRightToUseAssets
+    : 0;
   const journalRows = generateJournalTable(
     presentValue,
     leaseLiabilityRows,
@@ -111,7 +117,9 @@ export const generatePVCalculation = (lease: PropertyLease, params: XLSXGenerati
     openingDate,
     closingDate,
     expiryDate,
-    openingBalanceLeaseLiabilityNonCurrent
+    openingBalanceLeaseLiabilityNonCurrent,
+    openingBalanceLeaseLiabilityCurrent,
+    openingBalanceAccDeprRightToUseAssets
   );
 
   // Build the data array with header

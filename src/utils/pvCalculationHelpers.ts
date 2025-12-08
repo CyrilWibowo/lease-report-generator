@@ -319,7 +319,9 @@ export const generateJournalTable = (
   openingDate: Date,
   closingDate: Date,
   expiryDate: Date,
-  openingBalanceLeaseLiabilityNonCurrent: number
+  openingBalanceLeaseLiabilityNonCurrent: number,
+  openingBalanceLeaseLiabilityCurrent: number,
+  openingBalanceAccDeprRightToUseAssets: number
 ): JournalRow[] => {
   const rows: JournalRow[] = [];
 
@@ -363,26 +365,26 @@ export const generateJournalTable = (
   }
 
   // Lease Liability - Current
-  // Calculate row 10: sum(payment + interest expense between opening and closing) * -1
-  let openingToClosingTotal = 0;
-  allPaymentRows.forEach((row, index) => {
-    const paymentDate = normalizeDate(new Date(row.paymentDate));
-    if (paymentDate >= normalizedOpening && paymentDate <= normalizedClosing && leaseLiabilityRows[index]) {
-      openingToClosingTotal += leaseLiabilityRows[index].payment + leaseLiabilityRows[index].interestExpense;
-    }
-  });
-  const row10Value = -(openingToClosingTotal + row9Value);
+  // Calculate row 10: =IF($F$6>='Lease Payments'!$C$6,-$H$128,-SUM($P$42:$Q$53))
+  // If closing date >= expiry date, row10 = -openingBalanceLeaseLiabilityCurrent
+  // Else row10 = -SUM(payment + interest expense) for the period between opening and closing dates
+  let row10Value: number;
+  if (normalizedClosing >= normalizedExpiry) {
+    row10Value = -openingBalanceLeaseLiabilityCurrent;
+  } else {
+    let openingToClosingTotal = 0;
+    allPaymentRows.forEach((row, index) => {
+      const paymentDate = normalizeDate(new Date(row.paymentDate));
+      if (paymentDate >= normalizedOpening && paymentDate <= normalizedClosing && leaseLiabilityRows[index]) {
+        openingToClosingTotal += leaseLiabilityRows[index].payment + leaseLiabilityRows[index].interestExpense;
+      }
+    });
+    row10Value = -openingToClosingTotal;
+  }
 
   // Deprication Expense
-  // Calculate row 11: abs(sum of all depreciation between opening and closing inclusive)
-  let depreciationTotal = 0;
-  allPaymentRows.forEach((row, index) => {
-    const paymentDate = normalizeDate(new Date(row.paymentDate));
-    if (paymentDate >= normalizedOpening && paymentDate <= normalizedClosing && rightOfUseAssetRows[index]) {
-      depreciationTotal += rightOfUseAssetRows[index].depreciation;
-    }
-  });
-  const row11Value = Math.abs(depreciationTotal);
+  // Calculate row 11: -Acc.Depr Right to Use the Assets
+  let row11Value: number;
 
   // Interest Expense Rent
   // Calculate row 12: sum of interest expense between opening and closing inclusive
@@ -395,12 +397,35 @@ export const generateJournalTable = (
   });
 
   // Acc.Depr Right to Use the Assets
-  // Calculate row 13: same as row 10 but not abs (keep negative)
-  const row13Value = -row11Value;
+  // Calculate row 13: =-IF($F$6>='Lease Payments'!$C$6,-SUM($K$10:$K$53)+$H$127,SUM($K$42:$K$53))
+  // If closing date >= expiry date: -(-SUM(depreciation from beginning to closing) + openingBalanceAccDeprRightToUseAssets)
+  // Else: SUM(depreciation from opening to closing)
+  let row13Value: number;
+  if (normalizedClosing >= normalizedExpiry) {
+    // Sum depreciation from beginning to closing date
+    let depreciationFromBeginningToClosing = 0;
+    allPaymentRows.forEach((row, index) => {
+      const paymentDate = normalizeDate(new Date(row.paymentDate));
+      if (paymentDate <= normalizedClosing && rightOfUseAssetRows[index]) {
+        depreciationFromBeginningToClosing += rightOfUseAssetRows[index].depreciation;
+      }
+    });
+    row13Value = -(-depreciationFromBeginningToClosing + openingBalanceAccDeprRightToUseAssets);
+  } else {
+    let depreciationTotal = 0;
+    allPaymentRows.forEach((row, index) => {
+      const paymentDate = normalizeDate(new Date(row.paymentDate));
+      if (paymentDate >= normalizedOpening && paymentDate <= normalizedClosing && rightOfUseAssetRows[index]) {
+        depreciationTotal += rightOfUseAssetRows[index].depreciation;
+      }
+    });
+    row13Value = depreciationTotal;
+  }
+  row11Value = -row13Value;
 
   // Rent Expense
-  // Calculate row 14: sum of rows 9-13
-  const row14Value = row9Value + row10Value + row11Value + interestExpenseTotal + row13Value;
+  // Calculate row 14: -sum of rows 9-13
+  const row14Value = -(row9Value + row10Value + row11Value + interestExpenseTotal + row13Value);
 
   // Build the 15 rows
   rows.push({ col1: '', col2: '', col3: '' }); // Row 1
