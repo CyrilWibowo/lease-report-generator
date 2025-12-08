@@ -321,7 +321,8 @@ export const generateJournalTable = (
   expiryDate: Date,
   openingBalanceLeaseLiabilityNonCurrent: number,
   openingBalanceLeaseLiabilityCurrent: number,
-  openingBalanceAccDeprRightToUseAssets: number
+  openingBalanceAccDeprRightToUseAssets: number,
+  openingBalanceInterestExpenseRent: number
 ): JournalRow[] => {
   const rows: JournalRow[] = [];
 
@@ -387,14 +388,29 @@ export const generateJournalTable = (
   let row11Value: number;
 
   // Interest Expense Rent
-  // Calculate row 12: sum of interest expense between opening and closing inclusive
-  let interestExpenseTotal = 0;
-  allPaymentRows.forEach((row, index) => {
-    const paymentDate = normalizeDate(new Date(row.paymentDate));
-    if (paymentDate >= normalizedOpening && paymentDate <= normalizedClosing && leaseLiabilityRows[index]) {
-      interestExpenseTotal += leaseLiabilityRows[index].interestExpense;
-    }
-  });
+  // Calculate row 12: =IF($F$6>='Lease Payments'!$C$6,SUM($Q$10:$Q$53)-$H$131,SUM($Q$42:$Q$53))
+  // If closing date >= expiry date: SUM(interest expense from beginning to closing) - openingBalanceInterestExpenseRent
+  // Else: SUM(interest expense from opening to closing)
+  let interestExpenseTotal: number;
+  if (normalizedClosing >= normalizedExpiry) {
+    // Sum interest expense from beginning to closing date
+    let interestFromBeginningToClosing = 0;
+    allPaymentRows.forEach((row, index) => {
+      const paymentDate = normalizeDate(new Date(row.paymentDate));
+      if (paymentDate <= normalizedClosing && leaseLiabilityRows[index]) {
+        interestFromBeginningToClosing += leaseLiabilityRows[index].interestExpense;
+      }
+    });
+    interestExpenseTotal = interestFromBeginningToClosing - openingBalanceInterestExpenseRent;
+  } else {
+    interestExpenseTotal = 0;
+    allPaymentRows.forEach((row, index) => {
+      const paymentDate = normalizeDate(new Date(row.paymentDate));
+      if (paymentDate >= normalizedOpening && paymentDate <= normalizedClosing && leaseLiabilityRows[index]) {
+        interestExpenseTotal += leaseLiabilityRows[index].interestExpense;
+      }
+    });
+  }
 
   // Acc.Depr Right to Use the Assets
   // Calculate row 13: =-IF($F$6>='Lease Payments'!$C$6,-SUM($K$10:$K$53)+$H$127,SUM($K$42:$K$53))
