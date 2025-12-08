@@ -79,6 +79,19 @@ const Dashboard: React.FC<DashboardProps> = ({
     return expiryDate < today;
   };
 
+  const isWithinThreeMonthsOfExpiry = (lease: PropertyLease | MotorVehicleLease): boolean => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const expiryDate = new Date(lease.expiryDate);
+    expiryDate.setHours(0, 0, 0, 0);
+
+    const threeMonthsFromNow = new Date(today);
+    threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
+
+    return expiryDate <= threeMonthsFromNow && expiryDate >= today;
+  };
+
   const renderIncrementMethodsTooltip = (lease: Lease) => {
     const committedYears = calculateCommittedYears(lease);
     if (committedYears < 1) return null;
@@ -154,7 +167,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       width: '12px',
                       height: '12px',
                       borderRadius: '50%',
-                      backgroundColor: isLeaseExpired(lease) ? '#dc3545' : '#28a745',
+                      backgroundColor: isLeaseExpired(lease) ? '#dc3545' : (isWithinThreeMonthsOfExpiry(lease) ? '#ff9c1bff' : '#28a745'),
                       cursor: 'help',
                       position: 'relative'
                     }}
