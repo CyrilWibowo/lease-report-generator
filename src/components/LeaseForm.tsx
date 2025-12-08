@@ -33,6 +33,19 @@ const LeaseForm: React.FC<LeaseFormProps> = ({
       <h2>Add {leaseType} Lease</h2>
 
       <div className="form-grid">
+        {/* Entity - Common field */}
+        <div className="form-group">
+          <label>Entity *</label>
+          {errors.entity && <span className="error-text">This field is required</span>}
+          <input
+            type="text"
+            className={errors.entity ? 'error' : ''}
+            value={lease.entity}
+            onChange={(e) => onInputChange('entity', e.target.value)}
+            placeholder="Enter entity"
+          />
+        </div>
+
         {/* Lessor - Common field */}
         <div className="form-group">
           <label>Lessor *</label>
