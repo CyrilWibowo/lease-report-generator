@@ -364,7 +364,7 @@ export const generateJournalTable = (
   // Calculate row 9: =IF(H129=0,0,IF($F$6>='Lease Payments'!$C$6,-$H$129,-SUM($P$10:$Q$17)))
   // If opening balance Lease Liability Non Current is 0, row9 = 0
   // Else if closing date >= expiry date, row9 = -openingBalanceLeaseLiabilityNonCurrent
-  // Else row9 = -SUM(payment + interest expense) for the period between opening and closing dates
+  // Else row9 = -SUM(payment + interest expense) for the period after closing
   let row9Value: number;
   if (openingBalanceLeaseLiabilityNonCurrent === 0) {
     row9Value = 0;
@@ -373,8 +373,12 @@ export const generateJournalTable = (
   } else {
     let openingToClosingSum = 0;
     allPaymentRows.forEach((row, index) => {
+      const openingYear = normalizedOpening.getFullYear();
+      const nextPeriodStart = normalizeDate(new Date(openingYear + 1, 0, 1));
+      const nextPeriodEnd = normalizeDate(new Date(openingYear + 1, 11, 31));
+
       const paymentDate = normalizeDate(new Date(row.paymentDate));
-      if (paymentDate >= normalizedOpening && paymentDate <= normalizedClosing && leaseLiabilityRows[index]) {
+      if (paymentDate >= nextPeriodStart && paymentDate <= nextPeriodEnd && leaseLiabilityRows[index]) {
         openingToClosingSum += leaseLiabilityRows[index].payment + leaseLiabilityRows[index].interestExpense;
       }
     });
@@ -396,7 +400,7 @@ export const generateJournalTable = (
         openingToClosingTotal += leaseLiabilityRows[index].payment + leaseLiabilityRows[index].interestExpense;
       }
     });
-    row10Value = -openingToClosingTotal;
+    row10Value = -openingToClosingTotal - row9Value;
   }
 
   // Deprication Expense
