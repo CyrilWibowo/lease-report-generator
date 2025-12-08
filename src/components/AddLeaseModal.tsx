@@ -76,6 +76,7 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
       setLease({
         id: baseId,
         type: 'Property',
+        entity: '',
         lessor: '',
         propertyAddress: '',
         commencementDate: '',
@@ -92,6 +93,7 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
       setLease({
         id: baseId,
         type: 'Motor Vehicle',
+        entity: '',
         lessor: '',
         description: '',
         vinSerialNo: '',
@@ -144,6 +146,10 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
     let isValid = true;
 
     // Common validations
+    if (!lease.entity?.trim()) {
+      newErrors.entity = true;
+      isValid = false;
+    }
     if (!lease.lessor?.trim()) {
       newErrors.lessor = true;
       isValid = false;
