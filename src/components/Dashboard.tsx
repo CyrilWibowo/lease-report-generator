@@ -140,6 +140,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       rows.push(
         <tr key={i}>
+          <td>{lease ? lease.leaseId : ''}</td>
           <td>{lease ? lease.entity : ''}</td>
           <td>{lease ? lease.lessor : ''}</td>
           <td>{lease ? lease.propertyAddress : ''}</td>
@@ -206,6 +207,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       const leasePeriod = lease ? calculateCommittedYears(lease) : 0;
       rows.push(
         <tr key={i}>
+          <td>{lease ? lease.leaseId : ''}</td>
           <td>{lease ? lease.entity : ''}</td>
           <td>{lease ? lease.lessor : ''}</td>
           <td>{lease ? lease.regoNo : ''}</td>
@@ -340,6 +342,9 @@ const Dashboard: React.FC<DashboardProps> = ({
           <table className="lease-table">
             <thead>
               <tr>
+                <th onClick={() => handleSort('leaseId', true)} style={{ cursor: 'pointer' }}>
+                  ID{renderSortIndicator('leaseId', true)}
+                </th>
                 <th onClick={() => handleSort('entity', true)} style={{ cursor: 'pointer' }}>
                   Entity{renderSortIndicator('entity', true)}
                 </th>
@@ -389,6 +394,9 @@ const Dashboard: React.FC<DashboardProps> = ({
           <table className="lease-table">
             <thead>
               <tr>
+                <th onClick={() => handleSort('leaseId', false)} style={{ cursor: 'pointer' }}>
+                  ID{renderSortIndicator('leaseId', false)}
+                </th>
                 <th onClick={() => handleSort('entity', false)} style={{ cursor: 'pointer' }}>
                   Entity{renderSortIndicator('entity', false)}
                 </th>
