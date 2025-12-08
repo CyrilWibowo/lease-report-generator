@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Lease, PropertyLease, MotorVehicleLease } from './types/Lease';
 import Dashboard from './components/Dashboard';
 import AddLeaseModal from './components/AddLeaseModal';
+import { loadLeases, addLease, updateLease, deleteLease } from './utils/dataStorage';
 import rimexLogo from './assets/rimexLogo.png';
 import './App.css';
 
@@ -11,29 +12,27 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    const savedLeases = localStorage.getItem('leases');
-    if (savedLeases) {
-      setLeases(JSON.parse(savedLeases));
-    }
+    const initLeases = async () => {
+      const loaded = await loadLeases();
+      setLeases(loaded);
+    };
+    initLeases();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('leases', JSON.stringify(leases));
-  }, [leases]);
-
-  const handleAddLease = (newLease: Lease) => {
-    setLeases([...leases, newLease]);
+  const handleAddLease = async (newLease: Lease) => {
+    const updatedLeases = await addLease(newLease);
+    setLeases(updatedLeases);
     setIsModalOpen(false);
   };
 
-  const handleUpdateLease = (updatedLease: Lease) => {
-    setLeases(leases.map(lease =>
-      lease.id === updatedLease.id ? updatedLease : lease
-    ));
+  const handleUpdateLease = async (updatedLease: Lease) => {
+    const updatedLeases = await updateLease(updatedLease);
+    setLeases(updatedLeases);
   };
 
-  const handleDeleteLease = (leaseId: string) => {
-    setLeases(leases.filter(lease => lease.id !== leaseId));
+  const handleDeleteLease = async (leaseId: string) => {
+    const updatedLeases = await deleteLease(leaseId);
+    setLeases(updatedLeases);
   };
 
   const propertyLeases = leases.filter((lease): lease is PropertyLease => lease.type === 'Property');
