@@ -154,7 +154,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           >
             {lease && `${committedYears} years`}
           </td>
-          <td>{lease ? formatCurrency(lease.annualRent) : ''}</td>
+          <td>{lease ? formatCurrency((parseFloat(lease.annualRent) / 12).toFixed(2)) : ''}</td>
           <td>{lease ? `${lease.rbaCpiRate}%` : ''}</td>
           <td>{lease ? `${lease.borrowingRate}%` : ''}</td>
           <td>{lease ? `${lease.fixedIncrementRate}%` : ''}</td>
@@ -216,7 +216,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {lease ? formatDate(lease.expiryDate) : ''}
           </td>
           <td>{lease && `${leasePeriod} years`}</td>
-          <td>{lease ? formatCurrency(lease.annualRent) : ''}</td>
+          <td>{lease ? formatCurrency((parseFloat(lease.annualRent) / 12).toFixed(2)) : ''}</td>
           <td>{lease ? `${lease.borrowingRate}%` : ''}</td>
           <td>
             {lease && (
@@ -357,7 +357,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   Total Committed Years{renderSortIndicator('committedYears', true)}
                 </th>
                 <th onClick={() => handleSort('annualRent', true)} style={{ cursor: 'pointer' }}>
-                  Annual Rent (exc. GST){renderSortIndicator('annualRent', true)}
+                  Monthly Rent (exc. GST){renderSortIndicator('annualRent', true)}
                 </th>
                 <th onClick={() => handleSort('rbaCpiRate', true)} style={{ cursor: 'pointer' }}>
                   RBA CPI Rate{renderSortIndicator('rbaCpiRate', true)}
@@ -412,7 +412,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   Lease Period{renderSortIndicator('committedYears', false)}
                 </th>
                 <th onClick={() => handleSort('annualRent', false)} style={{ cursor: 'pointer' }}>
-                  Annual Rent (exc. GST){renderSortIndicator('annualRent', false)}
+                  Monthly Rent (exc. GST){renderSortIndicator('annualRent', false)}
                 </th>
                 <th onClick={() => handleSort('borrowingRate', false)} style={{ cursor: 'pointer' }}>
                   Borrowing Rate{renderSortIndicator('borrowingRate', false)}

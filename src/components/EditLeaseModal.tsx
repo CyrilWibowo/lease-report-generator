@@ -381,15 +381,19 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
               </>
             )}
 
-            {/* Annual Rent - Common field */}
+            {/* Monthly Rent - displayed as monthly, stored as annual */}
             <div className="form-group">
-              <label className="form-label">Annual Rent *</label>
+              <label className="form-label">Monthly Rent (exc. GST) *</label>
               {errors.annualRent && <span className="error-text">This field is required</span>}
               <input
                 type="number"
                 className={errors.annualRent ? 'form-input-error' : 'form-input'}
-                value={editedLease.annualRent}
-                onChange={(e) => handleInputChange('annualRent', e.target.value)}
+                value={editedLease.annualRent ? (parseFloat(editedLease.annualRent) / 12).toFixed(2) : ''}
+                onChange={(e) => {
+                  const monthlyValue = e.target.value;
+                  const annualValue = monthlyValue ? (parseFloat(monthlyValue) * 12).toString() : '';
+                  handleInputChange('annualRent', annualValue);
+                }}
                 placeholder="0.00"
                 step="0.01"
               />
