@@ -98,6 +98,10 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
     let isValid = true;
 
     // Common validations
+    if (!editedLease.entity?.trim()) {
+      newErrors.entity = true;
+      isValid = false;
+    }
     if (!editedLease.lessor?.trim()) {
       newErrors.lessor = true;
       isValid = false;
@@ -226,6 +230,19 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
           </div>
 
           <div className="form-grid">
+            {/* Entity - Common field */}
+            <div className="form-group">
+              <label className="form-label">Entity *</label>
+              {errors.entity && <span className="error-text">This field is required</span>}
+              <input
+                type="text"
+                className={errors.entity ? 'form-input-error' : 'form-input'}
+                value={editedLease.entity}
+                onChange={(e) => handleInputChange('entity', e.target.value)}
+                placeholder="Enter entity"
+              />
+            </div>
+
             {/* Lessor - Common field */}
             <div className="form-group">
               <label className="form-label">Lessor *</label>
