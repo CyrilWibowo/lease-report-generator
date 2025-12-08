@@ -212,6 +212,7 @@ export const calculateLeaseLiabilitySummary = (
       shortTerm += liability.payment + liability.interestExpense;
     }
   });
+  shortTerm *= -1;
 
   // Calculate long-term: liability ending at the end date
   const endDateIndex = allPaymentRows.findIndex(row => {
@@ -225,7 +226,7 @@ export const calculateLeaseLiabilitySummary = (
   }
 
   return {
-    shortTerm: Math.round(shortTerm * 100) / 100,
+    shortTerm: (Math.round(shortTerm * 100) / 100),
     longTerm: Math.round(longTerm * 100) / 100,
     total: Math.round((shortTerm + longTerm) * 100) / 100
   };
