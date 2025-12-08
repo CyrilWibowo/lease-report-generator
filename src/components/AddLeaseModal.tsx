@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Lease, PropertyLease, MotorVehicleLease } from '../types/Lease';
 import TypeSelection from './TypeSelection';
 import LeaseForm from './LeaseForm';
+import { generateLeaseId } from '../utils/helper';
 import './AddLeaseModal.css';
 
 interface AddLeaseModalProps {
@@ -75,6 +76,7 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
     if (type === 'Property') {
       setLease({
         id: baseId,
+        leaseId: generateLeaseId('Property'),
         type: 'Property',
         entity: '',
         lessor: '',
@@ -92,6 +94,7 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
     } else {
       setLease({
         id: baseId,
+        leaseId: generateLeaseId('Motor Vehicle'),
         type: 'Motor Vehicle',
         entity: '',
         lessor: '',
