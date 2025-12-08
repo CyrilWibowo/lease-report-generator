@@ -494,6 +494,7 @@ export interface BalanceSummaryParams {
     rentExpense: number;
   };
   journalRows: JournalRow[];
+  isExtension: boolean;
 }
 
 /**
@@ -517,7 +518,8 @@ export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (stri
     closingDate,
     expiryDate,
     openingBalances,
-    journalRows
+    journalRows,
+    isExtension
   } = params;
 
   const normalizedClosing = normalizeDate(closingDate);
@@ -534,6 +536,8 @@ export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (stri
   // Journal row 11 = index 10: Depreciation Expense
   // Journal row 12 = index 11: Interest Expense Rent
   // Journal row 13 = index 12: Acc.Depr Right to Use Assets
+  const journalRow4Value = typeof journalRows[3]?.col3 === 'number' ? journalRows[3].col3 : 0;
+  const journalRow5Value = typeof journalRows[4]?.col3 === 'number' ? journalRows[4].col3 : 0;
   const journalRow9Value = typeof journalRows[8]?.col3 === 'number' ? journalRows[8].col3 : 0;
   const journalRow10Value = typeof journalRows[9]?.col3 === 'number' ? journalRows[9].col3 : 0;
   const journalRow11Value = typeof journalRows[10]?.col3 === 'number' ? journalRows[10].col3 : 0;
@@ -588,19 +592,21 @@ export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (stri
 
   // Row 3: 22005 Lease Liability - Current
   // Movement = journal row 10 value
+  const row3Movement = isExtension ? journalRow10Value + journalRow4Value : journalRow10Value;
   rows.push([
     '22005 Lease Liability - Current',
     openingBalances.leaseLiabilityCurrent,
-    journalRow10Value,
+    row3Movement,
     openingBalances.leaseLiabilityCurrent + journalRow10Value
   ]);
 
   // Row 4: 22010 Lease Liability - Non Current
   // Movement = journal row 9 value
+  const row4Movement = isExtension ? journalRow9Value + journalRow5Value : journalRow9Value;
   rows.push([
     '22010 Lease Liability - Non Current',
     openingBalances.leaseLiabilityNonCurrent,
-    journalRow9Value,
+    row4Movement,
     openingBalances.leaseLiabilityNonCurrent + journalRow9Value
   ]);
 
@@ -625,8 +631,8 @@ export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (stri
   const rentExpenseMovement = -(
     rightToUseAssetsMovement +
     journalRow13Value +
-    journalRow10Value +
-    journalRow9Value +
+    row3Movement +
+    row4Movement +
     journalRow11Value +
     journalRow12Value
   );
