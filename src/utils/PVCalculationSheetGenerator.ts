@@ -264,7 +264,8 @@ export const generatePVCalculation = (lease: PropertyLease, params: XLSXGenerati
       interestExpenseRent: openingBalanceInterestExpenseRent,
       rentExpense: openingBalanceRentExpense
     },
-    journalRows
+    journalRows,
+    isExtension: params.isExtension
   });
 
   // Add empty row before balance summary table
