@@ -140,6 +140,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       rows.push(
         <tr key={i}>
+          <td>{lease ? lease.entity : ''}</td>
           <td>{lease ? lease.lessor : ''}</td>
           <td>{lease ? lease.propertyAddress : ''}</td>
           <td>{lease ? formatDate(lease.commencementDate) : ''}</td>
@@ -205,12 +206,13 @@ const Dashboard: React.FC<DashboardProps> = ({
       const leasePeriod = lease ? calculateCommittedYears(lease) : 0;
       rows.push(
         <tr key={i}>
+          <td>{lease ? lease.entity : ''}</td>
           <td>{lease ? lease.lessor : ''}</td>
+          <td>{lease ? lease.regoNo : ''}</td>
           <td>{lease ? lease.description : ''}</td>
           <td>{lease ? lease.vehicleType : ''}</td>
           <td>{lease ? lease.engineNumber : ''}</td>
           <td>{lease ? lease.vinSerialNo : ''}</td>
-          <td>{lease ? lease.regoNo : ''}</td>
           <td>{lease ? formatDate(lease.deliveryDate) : ''}</td>
           <td style={{ color: lease && isLeaseExpired(lease) ? '#dc3545' : '#212529' }}>
             {lease ? formatDate(lease.expiryDate) : ''}
@@ -338,6 +340,9 @@ const Dashboard: React.FC<DashboardProps> = ({
           <table className="lease-table">
             <thead>
               <tr>
+                <th onClick={() => handleSort('entity', true)} style={{ cursor: 'pointer' }}>
+                  Entity{renderSortIndicator('entity', true)}
+                </th>
                 <th onClick={() => handleSort('lessor', true)} style={{ cursor: 'pointer' }}>
                   Lessor{renderSortIndicator('lessor', true)}
                 </th>
@@ -384,8 +389,14 @@ const Dashboard: React.FC<DashboardProps> = ({
           <table className="lease-table">
             <thead>
               <tr>
+                <th onClick={() => handleSort('entity', false)} style={{ cursor: 'pointer' }}>
+                  Entity{renderSortIndicator('entity', false)}
+                </th>
                 <th onClick={() => handleSort('lessor', false)} style={{ cursor: 'pointer' }}>
                   Lessor{renderSortIndicator('lessor', false)}
+                </th>
+                <th onClick={() => handleSort('regoNo', false)} style={{ cursor: 'pointer' }}>
+                  Rego No.{renderSortIndicator('regoNo', false)}
                 </th>
                 <th onClick={() => handleSort('description', false)} style={{ cursor: 'pointer' }}>
                   Description{renderSortIndicator('description', false)}
@@ -398,9 +409,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </th>
                 <th onClick={() => handleSort('vinSerialNo', false)} style={{ cursor: 'pointer' }}>
                   VIN/Serial No.{renderSortIndicator('vinSerialNo', false)}
-                </th>
-                <th onClick={() => handleSort('regoNo', false)} style={{ cursor: 'pointer' }}>
-                  Rego No.{renderSortIndicator('regoNo', false)}
                 </th>
                 <th onClick={() => handleSort('deliveryDate', false)} style={{ cursor: 'pointer' }}>
                   Delivery Date{renderSortIndicator('deliveryDate', false)}
