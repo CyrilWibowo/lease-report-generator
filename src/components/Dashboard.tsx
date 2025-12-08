@@ -14,13 +14,15 @@ interface DashboardProps {
   motorVehicleLeases: MotorVehicleLease[];
   onUpdateLease: (lease: Lease) => void;
   onDeleteLease: (leaseId: string) => void;
+  onCopyLease: (lease: Lease) => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
   propertyLeases,
   motorVehicleLeases,
   onUpdateLease,
-  onDeleteLease
+  onDeleteLease,
+  onCopyLease
 }) => {
   const [hoveredLease, setHoveredLease] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
@@ -418,6 +420,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           onClose={() => setEditingLease(null)}
           onSave={onUpdateLease}
           onDelete={onDeleteLease}
+          onCopy={onCopyLease}
         />
       )}
 
