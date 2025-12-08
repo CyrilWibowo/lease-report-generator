@@ -35,6 +35,11 @@ function App() {
     setLeases(updatedLeases);
   };
 
+  const handleCopyLease = async (copiedLease: Lease) => {
+    const updatedLeases = await addLease(copiedLease);
+    setLeases(updatedLeases);
+  };
+
   const propertyLeases = leases.filter((lease): lease is PropertyLease => lease.type === 'Property');
   const motorVehicleLeases = leases.filter((lease): lease is MotorVehicleLease => lease.type === 'Motor Vehicle');
 
@@ -52,6 +57,7 @@ function App() {
         motorVehicleLeases={motorVehicleLeases}
         onUpdateLease={handleUpdateLease}
         onDeleteLease={handleDeleteLease}
+        onCopyLease={handleCopyLease}
       />
 
       {isModalOpen && (
