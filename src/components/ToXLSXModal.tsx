@@ -22,6 +22,7 @@ export interface XLSXGenerationParams {
   leaseLiabilityClosing: string;
   paymentTiming: 'Beginning' | 'End';
   allocationToLeaseComponent: number;
+  isExtension: boolean;
   openingBalance: OpeningBalanceParams;
 }
 
@@ -31,6 +32,7 @@ const ToXLSXModal: React.FC<ToXLSXModalProps> = ({ onClose, onGenerate }) => {
     leaseLiabilityClosing: '',
     paymentTiming: 'Beginning',
     allocationToLeaseComponent: 1,
+    isExtension: false,
     openingBalance: {
       rightToUseAssets: '',
       accDeprRightToUseAssets: '',
@@ -62,6 +64,13 @@ const ToXLSXModal: React.FC<ToXLSXModalProps> = ({ onClose, onGenerate }) => {
     });
   };
 
+  const handleExtensionToggle = (checked: boolean) => {
+    setParams({
+      ...params,
+      isExtension: checked
+    });
+  };
+
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: boolean } = {};
     let isValid = true;
@@ -85,7 +94,21 @@ const ToXLSXModal: React.FC<ToXLSXModalProps> = ({ onClose, onGenerate }) => {
 
   const handleGenerate = () => {
     if (validateForm()) {
-      onGenerate(params);
+      const finalParams = params.isExtension
+        ? {
+            ...params,
+            openingBalance: {
+              rightToUseAssets: 0,
+              accDeprRightToUseAssets: 0,
+              leaseLiabilityCurrent: 0,
+              leaseLiabilityNonCurrent: 0,
+              depreciationExpense: 0,
+              interestExpenseRent: 0,
+              rentExpense: 0
+            }
+          }
+        : params;
+      onGenerate(finalParams);
       onClose();
     } else {
       alert('Please fill in all required fields');
@@ -155,93 +178,104 @@ const ToXLSXModal: React.FC<ToXLSXModalProps> = ({ onClose, onGenerate }) => {
 
         <div className="xlsx-section-header">
           <h3 className="xlsx-section-title">Opening Balance</h3>
+          <label className="xlsx-checkbox-label">
+            <input
+              type="checkbox"
+              checked={params.isExtension}
+              onChange={(e) => handleExtensionToggle(e.target.checked)}
+              className="xlsx-checkbox"
+            />
+            Is Extension (all opening balances will be 0)
+          </label>
         </div>
 
-        <div className="xlsx-form-grid">
-          <div className="xlsx-form-group">
-            <label className="xlsx-form-label">Right to Use Assets</label>
-            <input
-              type="number"
-              className="xlsx-form-input"
-              value={params.openingBalance.rightToUseAssets}
-              onChange={(e) => handleOpeningBalanceChange('rightToUseAssets', e.target.value)}
-              placeholder="0"
-              step="0.01"
-            />
-          </div>
+        {!params.isExtension && (
+          <div className="xlsx-form-grid">
+            <div className="xlsx-form-group">
+              <label className="xlsx-form-label">Right to Use Assets</label>
+              <input
+                type="number"
+                className="xlsx-form-input"
+                value={params.openingBalance.rightToUseAssets}
+                onChange={(e) => handleOpeningBalanceChange('rightToUseAssets', e.target.value)}
+                placeholder="0"
+                step="0.01"
+              />
+            </div>
 
-          <div className="xlsx-form-group">
-            <label className="xlsx-form-label">Acc. Depr. Right to Use Assets</label>
-            <input
-              type="number"
-              className="xlsx-form-input"
-              value={params.openingBalance.accDeprRightToUseAssets}
-              onChange={(e) => handleOpeningBalanceChange('accDeprRightToUseAssets', e.target.value)}
-              placeholder="0"
-              step="0.01"
-            />
-          </div>
+            <div className="xlsx-form-group">
+              <label className="xlsx-form-label">Acc. Depr. Right to Use Assets</label>
+              <input
+                type="number"
+                className="xlsx-form-input"
+                value={params.openingBalance.accDeprRightToUseAssets}
+                onChange={(e) => handleOpeningBalanceChange('accDeprRightToUseAssets', e.target.value)}
+                placeholder="0"
+                step="0.01"
+              />
+            </div>
 
-          <div className="xlsx-form-group">
-            <label className="xlsx-form-label">Lease Liability - Current</label>
-            <input
-              type="number"
-              className="xlsx-form-input"
-              value={params.openingBalance.leaseLiabilityCurrent}
-              onChange={(e) => handleOpeningBalanceChange('leaseLiabilityCurrent', e.target.value)}
-              placeholder="0"
-              step="0.01"
-            />
-          </div>
+            <div className="xlsx-form-group">
+              <label className="xlsx-form-label">Lease Liability - Current</label>
+              <input
+                type="number"
+                className="xlsx-form-input"
+                value={params.openingBalance.leaseLiabilityCurrent}
+                onChange={(e) => handleOpeningBalanceChange('leaseLiabilityCurrent', e.target.value)}
+                placeholder="0"
+                step="0.01"
+              />
+            </div>
 
-          <div className="xlsx-form-group">
-            <label className="xlsx-form-label">Lease Liability - Non-Current</label>
-            <input
-              type="number"
-              className="xlsx-form-input"
-              value={params.openingBalance.leaseLiabilityNonCurrent}
-              onChange={(e) => handleOpeningBalanceChange('leaseLiabilityNonCurrent', e.target.value)}
-              placeholder="0"
-              step="0.01"
-            />
-          </div>
+            <div className="xlsx-form-group">
+              <label className="xlsx-form-label">Lease Liability - Non-Current</label>
+              <input
+                type="number"
+                className="xlsx-form-input"
+                value={params.openingBalance.leaseLiabilityNonCurrent}
+                onChange={(e) => handleOpeningBalanceChange('leaseLiabilityNonCurrent', e.target.value)}
+                placeholder="0"
+                step="0.01"
+              />
+            </div>
 
-          <div className="xlsx-form-group">
-            <label className="xlsx-form-label">Depreciation Expense</label>
-            <input
-              type="number"
-              className="xlsx-form-input"
-              value={params.openingBalance.depreciationExpense}
-              onChange={(e) => handleOpeningBalanceChange('depreciationExpense', e.target.value)}
-              placeholder="0"
-              step="0.01"
-            />
-          </div>
+            <div className="xlsx-form-group">
+              <label className="xlsx-form-label">Depreciation Expense</label>
+              <input
+                type="number"
+                className="xlsx-form-input"
+                value={params.openingBalance.depreciationExpense}
+                onChange={(e) => handleOpeningBalanceChange('depreciationExpense', e.target.value)}
+                placeholder="0"
+                step="0.01"
+              />
+            </div>
 
-          <div className="xlsx-form-group">
-            <label className="xlsx-form-label">Interest Expense Rent</label>
-            <input
-              type="number"
-              className="xlsx-form-input"
-              value={params.openingBalance.interestExpenseRent}
-              onChange={(e) => handleOpeningBalanceChange('interestExpenseRent', e.target.value)}
-              placeholder="0"
-              step="0.01"
-            />
-          </div>
+            <div className="xlsx-form-group">
+              <label className="xlsx-form-label">Interest Expense Rent</label>
+              <input
+                type="number"
+                className="xlsx-form-input"
+                value={params.openingBalance.interestExpenseRent}
+                onChange={(e) => handleOpeningBalanceChange('interestExpenseRent', e.target.value)}
+                placeholder="0"
+                step="0.01"
+              />
+            </div>
 
-          <div className="xlsx-form-group">
-            <label className="xlsx-form-label">Rent Expense</label>
-            <input
-              type="number"
-              className="xlsx-form-input"
-              value={params.openingBalance.rentExpense}
-              onChange={(e) => handleOpeningBalanceChange('rentExpense', e.target.value)}
-              placeholder="0"
-              step="0.01"
-            />
+            <div className="xlsx-form-group">
+              <label className="xlsx-form-label">Rent Expense</label>
+              <input
+                type="number"
+                className="xlsx-form-input"
+                value={params.openingBalance.rentExpense}
+                onChange={(e) => handleOpeningBalanceChange('rentExpense', e.target.value)}
+                placeholder="0"
+                step="0.01"
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="xlsx-modal-actions">
           <button className="xlsx-cancel-button" onClick={onClose}>Cancel</button>
