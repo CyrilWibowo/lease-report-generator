@@ -1,6 +1,7 @@
 // types/Lease.ts
 export interface BaseLease {
   id: string;
+  entity: string;
   lessor: string;
   borrowingRate: string;
   incrementMethods: { [year: number]: string };
