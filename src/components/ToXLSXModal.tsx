@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import './ToXLSXModal.css';
+import { OpeningBalance } from '../types/Lease';
 
 interface ToXLSXModalProps {
   onClose: () => void;
   onGenerate: (params: XLSXGenerationParams) => void;
+  openingBalances?: OpeningBalance[];
 }
 
 export interface OpeningBalanceParams {
@@ -26,7 +28,16 @@ export interface XLSXGenerationParams {
   openingBalance: OpeningBalanceParams;
 }
 
-const ToXLSXModal: React.FC<ToXLSXModalProps> = ({ onClose, onGenerate }) => {
+// Normalize date string to YYYY-MM-DD format for comparison
+const normalizeDateString = (dateStr: string): string => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+  // Return ISO date string (YYYY-MM-DD)
+  return date.toISOString().split('T')[0];
+};
+
+const ToXLSXModal: React.FC<ToXLSXModalProps> = ({ onClose, onGenerate, openingBalances = [] }) => {
   const [params, setParams] = useState<XLSXGenerationParams>({
     leaseLiabilityOpening: '',
     leaseLiabilityClosing: '',
@@ -45,6 +56,35 @@ const ToXLSXModal: React.FC<ToXLSXModalProps> = ({ onClose, onGenerate }) => {
   });
 
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
+
+  // Auto-fill opening balance when opening date matches an existing opening balance
+  useEffect(() => {
+    if (!params.leaseLiabilityOpening || openingBalances.length === 0) return;
+
+    const normalizedInputDate = normalizeDateString(params.leaseLiabilityOpening);
+
+    // Find matching opening balance by normalized date
+    const matchingBalance = openingBalances.find(ob =>
+      normalizeDateString(ob.openingDate) === normalizedInputDate
+    );
+
+    if (matchingBalance) {
+      // Auto-fill the opening balance fields and set isExtension based on the matched balance
+      setParams(prev => ({
+        ...prev,
+        isExtension: matchingBalance.isNewLeaseExtension,
+        openingBalance: {
+          rightToUseAssets: matchingBalance.rightToUseAssets,
+          accDeprRightToUseAssets: matchingBalance.accDeprRightToUseAssets,
+          leaseLiabilityCurrent: matchingBalance.leaseLiabilityCurrent,
+          leaseLiabilityNonCurrent: matchingBalance.leaseLiabilityNonCurrent,
+          depreciationExpense: matchingBalance.depreciationExpense,
+          interestExpenseRent: matchingBalance.interestExpenseRent,
+          rentExpense: matchingBalance.rentExpense
+        }
+      }));
+    }
+  }, [params.leaseLiabilityOpening, openingBalances]);
 
   const handleInputChange = (field: keyof XLSXGenerationParams, value: string | number) => {
     setParams({ ...params, [field]: value });
