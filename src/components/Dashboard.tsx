@@ -176,7 +176,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     className="download-btn"
                     onClick={() => setXlsxModalLease(lease)}
                   >
-                    .xlxs
+                    AASB16
                   </button>
                 </div>
                 <button
@@ -237,7 +237,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     className="download-btn"
                     onClick={() => setXlsxModalLease(lease)}
                   >
-                    .xlxs
+                    AASB16
                   </button>
                 </div>
                 <button
