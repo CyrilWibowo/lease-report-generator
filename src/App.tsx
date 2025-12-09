@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Lease, PropertyLease, MotorVehicleLease } from './types/Lease';
 import Dashboard from './components/Dashboard';
 import AddLeaseModal from './components/AddLeaseModal';
+import ReportModal from './components/ReportModal';
 import { loadLeases, addLease, updateLease, deleteLease } from './utils/dataStorage';
 import rimexLogo from './assets/rimexLogo.png';
 import cwTechnicaLogo from './assets/C&WTechnicaLogo.png';
@@ -11,6 +12,7 @@ import './App.css';
 function App() {
   const [leases, setLeases] = useState<Lease[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   useEffect(() => {
     const initLeases = async () => {
@@ -51,9 +53,14 @@ function App() {
           <img src={cwTechnicaLogo} alt="C&W Technica Logo" className="header-logo" />
           <img src={rimexLogo} alt="Rimex Logo" className="header-logo" />
         </div>
-        <button className="add-card-button" onClick={() => setIsModalOpen(true)}>
-          Add Card
-        </button>
+        <div className="header-buttons">
+          <button className="add-card-button" onClick={() => setIsModalOpen(true)}>
+            Add Card
+          </button>
+          <button className="report-button" onClick={() => setIsReportModalOpen(true)}>
+            Report
+          </button>
+        </div>
       </header>
 
       <Dashboard
@@ -68,6 +75,19 @@ function App() {
         <AddLeaseModal
           onClose={() => setIsModalOpen(false)}
           onSave={handleAddLease}
+        />
+      )}
+
+      {isReportModalOpen && (
+        <ReportModal
+          onClose={() => setIsReportModalOpen(false)}
+          propertyLeases={propertyLeases}
+          motorVehicleLeases={motorVehicleLeases}
+          onUpdateLeases={async (updatedLeases) => {
+            for (const lease of updatedLeases) {
+              await handleUpdateLease(lease);
+            }
+          }}
         />
       )}
     </div>
