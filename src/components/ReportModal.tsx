@@ -105,19 +105,6 @@ const ReportModal: React.FC<ReportModalProps> = ({
       // TODO: Implement report generation logic
       console.log('Generating report with params:', params);
       onClose();
-    } else {
-      if (hasMissingOpeningBalances) {
-        const missingList: string[] = [];
-        if (missingOpeningBalances.property.length > 0) {
-          missingList.push(`Property: ${missingOpeningBalances.property.join(', ')}`);
-        }
-        if (missingOpeningBalances.motor.length > 0) {
-          missingList.push(`Motor Vehicle: ${missingOpeningBalances.motor.join(', ')}`);
-        }
-        alert(`Missing opening balances for the selected date:\n${missingList.join('\n')}\n\nPlease use the "Manage Opening Balance" buttons to set opening balances for all leases.`);
-      } else {
-        alert('Please fill in all required fields');
-      }
     }
   };
 

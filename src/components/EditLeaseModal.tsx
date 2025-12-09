@@ -190,8 +190,6 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
     if (validateForm()) {
       onSave(editedLease);
       onClose();
-    } else {
-      alert('Please fill in all required fields');
     }
   };
 

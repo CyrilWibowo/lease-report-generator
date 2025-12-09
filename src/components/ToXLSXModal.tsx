@@ -150,8 +150,6 @@ const ToXLSXModal: React.FC<ToXLSXModalProps> = ({ onClose, onGenerate, openingB
         : params;
       onGenerate(finalParams);
       onClose();
-    } else {
-      alert('Please fill in all required fields');
     }
   };
 

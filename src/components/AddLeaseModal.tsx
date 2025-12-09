@@ -247,8 +247,6 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
   const handleSubmit = () => {
     if (validateForm() && lease) {
       onSave(lease);
-    } else {
-      alert('Please fill in all required fields');
     }
   };
 
