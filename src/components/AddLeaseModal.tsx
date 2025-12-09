@@ -90,6 +90,7 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
         borrowingRate: '',
         incrementMethods: {},
         overrideAmounts: {},
+        openingBalances: [],
       } as PropertyLease);
     } else {
       setLease({
@@ -109,6 +110,7 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
         borrowingRate: '',
         incrementMethods: {},
         overrideAmounts: {},
+        openingBalances: [],
       } as MotorVehicleLease);
     }
     setStep('form');
