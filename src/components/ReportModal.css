@@ -166,6 +166,38 @@
   background-color: #0056b3;
 }
 
+.report-generate-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.report-generate-button:disabled:hover {
+  background-color: #ccc;
+}
+
+.report-missing-balances-warning {
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  padding: 16px;
+  margin-top: 20px;
+  color: #856404;
+}
+
+.report-missing-balances-warning strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.report-missing-balances-warning ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.report-missing-balances-warning li {
+  margin-bottom: 4px;
+}
+
 @media (max-width: 768px) {
   .report-modal-content {
     padding: 30px 20px;

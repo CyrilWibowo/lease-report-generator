@@ -1,8 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import { PropertyLease, MotorVehicleLease } from '../types/Lease';
 import OpeningBalanceManager from './OpeningBalanceManager';
 import './ReportModal.css';
+
+// Normalize date string to YYYY-MM-DD format for comparison
+const normalizeDateString = (dateStr: string): string => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+  return date.toISOString().split('T')[0];
+};
 
 interface ReportModalProps {
   onClose: () => void;
@@ -34,6 +42,36 @@ const ReportModal: React.FC<ReportModalProps> = ({
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
   const [openingBalanceManagerType, setOpeningBalanceManagerType] = useState<'Property' | 'Motor Vehicle' | null>(null);
 
+  // Check which leases are missing opening balances for the selected date
+  const missingOpeningBalances = useMemo(() => {
+    const normalizedDate = normalizeDateString(params.leaseLiabilityOpening);
+    if (!normalizedDate) return { property: [], motor: [] };
+
+    const checkLeasesForMissingBalances = (leases: (PropertyLease | MotorVehicleLease)[]): string[] => {
+      return leases
+        .filter(lease => {
+          if (!lease.openingBalances || lease.openingBalances.length === 0) return true;
+          const hasMatchingBalance = lease.openingBalances.some(ob => {
+            const normalizedObDate = normalizeDateString(ob.openingDate);
+            return normalizedObDate === normalizedDate;
+          });
+          return !hasMatchingBalance;
+        })
+        .map(lease => 'propertyAddress' in lease ? lease.propertyAddress : lease.regoNo);
+    };
+
+    return {
+      property: (params.includedLeases === 'Property' || params.includedLeases === 'All')
+        ? checkLeasesForMissingBalances(propertyLeases)
+        : [],
+      motor: (params.includedLeases === 'Motor' || params.includedLeases === 'All')
+        ? checkLeasesForMissingBalances(motorVehicleLeases)
+        : []
+    };
+  }, [params.leaseLiabilityOpening, params.includedLeases, propertyLeases, motorVehicleLeases]);
+
+  const hasMissingOpeningBalances = missingOpeningBalances.property.length > 0 || missingOpeningBalances.motor.length > 0;
+
   const handleInputChange = (field: keyof ReportParams, value: string) => {
     setParams({ ...params, [field]: value });
     if (errors[field]) {
@@ -53,6 +91,10 @@ const ReportModal: React.FC<ReportModalProps> = ({
       newErrors.leaseLiabilityClosing = true;
       isValid = false;
     }
+    if (hasMissingOpeningBalances) {
+      newErrors.openingBalances = true;
+      isValid = false;
+    }
 
     setErrors(newErrors);
     return isValid;
@@ -64,7 +106,18 @@ const ReportModal: React.FC<ReportModalProps> = ({
       console.log('Generating report with params:', params);
       onClose();
     } else {
-      alert('Please fill in all required fields');
+      if (hasMissingOpeningBalances) {
+        const missingList: string[] = [];
+        if (missingOpeningBalances.property.length > 0) {
+          missingList.push(`Property: ${missingOpeningBalances.property.join(', ')}`);
+        }
+        if (missingOpeningBalances.motor.length > 0) {
+          missingList.push(`Motor Vehicle: ${missingOpeningBalances.motor.join(', ')}`);
+        }
+        alert(`Missing opening balances for the selected date:\n${missingList.join('\n')}\n\nPlease use the "Manage Opening Balance" buttons to set opening balances for all leases.`);
+      } else {
+        alert('Please fill in all required fields');
+      }
     }
   };
 
@@ -146,9 +199,30 @@ const ReportModal: React.FC<ReportModalProps> = ({
           )}
         </div>
 
+        {hasMissingOpeningBalances && params.leaseLiabilityOpening && (
+          <div className="report-missing-balances-warning">
+            <strong>Missing opening balances for the selected date:</strong>
+            <ul>
+              {missingOpeningBalances.property.length > 0 && (
+                <li>Property: {missingOpeningBalances.property.join(', ')}</li>
+              )}
+              {missingOpeningBalances.motor.length > 0 && (
+                <li>Motor Vehicle: {missingOpeningBalances.motor.join(', ')}</li>
+              )}
+            </ul>
+          </div>
+        )}
+
         <div className="report-modal-actions">
           <button className="report-cancel-button" onClick={onClose}>Cancel</button>
-          <button className="report-generate-button" onClick={handleGenerate}>Generate Report</button>
+          <button
+            className="report-generate-button"
+            onClick={handleGenerate}
+            disabled={hasMissingOpeningBalances}
+            title={hasMissingOpeningBalances ? 'Please set opening balances for all leases first' : ''}
+          >
+            Generate Report
+          </button>
         </div>
       </div>
 
