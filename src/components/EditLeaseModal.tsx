@@ -5,6 +5,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Lease, PropertyLease, MotorVehicleLease } from '../types/Lease';
 import { generateLeaseId } from '../utils/helper';
+import OpeningBalanceModal from './OpeningBalanceModal';
 import './EditLeaseModal.css';
 
 interface EditLeaseModalProps {
@@ -21,6 +22,7 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
   const [committedYears, setCommittedYears] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showCopyConfirm, setShowCopyConfirm] = useState(false);
+  const [showOpeningBalance, setShowOpeningBalance] = useState(false);
 
   useEffect(() => {
     calculateCommittedYears();
@@ -520,6 +522,9 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
               <button className="copy-button" onClick={handleCopy}>
                 <ContentCopyIcon /> Copy
               </button>
+              <button className="opening-balance-button" onClick={() => setShowOpeningBalance(true)}>
+                Manage Opening Balance
+              </button>
             </div>
             <div className="button-group">
               <button className="cancel-button" onClick={onClose}>Cancel</button>
@@ -565,6 +570,10 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
             </div>
           </div>
         </div>
+      )}
+
+      {showOpeningBalance && (
+        <OpeningBalanceModal onClose={() => setShowOpeningBalance(false)} />
       )}
     </>
   );
