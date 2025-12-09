@@ -304,3 +304,19 @@
 .confirm-copy-button:hover {
   background-color: #138496;
 }
+
+.opening-balance-button {
+  background-color: #6f42c1;
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 6px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.opening-balance-button:hover {
+  background-color: #5a32a3;
+}
