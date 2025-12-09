@@ -140,7 +140,7 @@
 }
 
 .edit-btn {
-  background-color: #007bff;
+  background-color: #666;
   color: white;
   border: none;
   padding: 6px 12px;
@@ -156,5 +156,5 @@
 }
 
 .edit-btn:hover {
-  background-color: #0056b3;
+  background-color: #414141;
 }
