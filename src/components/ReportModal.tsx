@@ -3,6 +3,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { PropertyLease, MotorVehicleLease } from '../types/Lease';
 import OpeningBalanceManager from './OpeningBalanceManager';
 import { generateSummaryReport } from '../utils/generateSummaryReport';
+import { generateDetailReport } from '../utils/generateDetailReport';
 import './ReportModal.css';
 
 // Normalize date string to YYYY-MM-DD format for comparison
@@ -105,8 +106,9 @@ const ReportModal: React.FC<ReportModalProps> = ({
     if (validateForm()) {
       if (params.reportType === 'Summary') {
         generateSummaryReport(propertyLeases, motorVehicleLeases, params);
+      } else if (params.reportType === 'Detail') {
+        generateDetailReport(propertyLeases, motorVehicleLeases, params);
       }
-      // TODO: Implement Detail report generation
       onClose();
     }
   };
