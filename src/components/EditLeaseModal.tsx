@@ -3,10 +3,12 @@ import React, { useState, useEffect } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { Lease, PropertyLease, MotorVehicleLease, OpeningBalance } from '../types/Lease';
+import { Lease, PropertyLease, MotorVehicleLease, OpeningBalance, Branch } from '../types/Lease';
 import { generateLeaseId } from '../utils/helper';
 import OpeningBalanceModal from './OpeningBalanceModal';
 import './EditLeaseModal.css';
+
+const BRANCH_OPTIONS: Branch[] = ['PERT', 'MACK', 'MTIS', 'MUSW', 'NEWM', 'ADEL', 'BLAC', 'CORP', 'PERT-RTS', 'MACK-RTS', 'ADEL-RTS', 'PARK'];
 
 interface EditLeaseModalProps {
   lease: Lease;
@@ -122,6 +124,10 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
     }
     if (!editedLease.lessor?.trim()) {
       newErrors.lessor = true;
+      isValid = false;
+    }
+    if (!editedLease.branch?.trim()) {
+      newErrors.branch = true;
       isValid = false;
     }
     if (!editedLease.annualRent.trim()) {
@@ -299,6 +305,21 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
                 </div>
 
                 <div className="form-group">
+                  <label className="form-label">Branch *</label>
+                  {errors.branch && <span className="error-text">This field is required</span>}
+                  <select
+                    className={errors.branch ? 'form-input-error' : 'form-input'}
+                    value={editedLease.branch}
+                    onChange={(e) => handleInputChange('branch', e.target.value)}
+                  >
+                    <option value="">Select branch...</option>
+                    {BRANCH_OPTIONS.map((branch) => (
+                      <option key={branch} value={branch}>{branch}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="form-group">
                   <label className="form-label">Commencement Date *</label>
                   {errors.commencementDate && <span className="error-text">This field is required</span>}
                   <input
@@ -348,6 +369,21 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     placeholder="Enter description"
                   />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Branch *</label>
+                  {errors.branch && <span className="error-text">This field is required</span>}
+                  <select
+                    className={errors.branch ? 'form-input-error' : 'form-input'}
+                    value={editedLease.branch}
+                    onChange={(e) => handleInputChange('branch', e.target.value)}
+                  >
+                    <option value="">Select branch...</option>
+                    {BRANCH_OPTIONS.map((branch) => (
+                      <option key={branch} value={branch}>{branch}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="form-group">

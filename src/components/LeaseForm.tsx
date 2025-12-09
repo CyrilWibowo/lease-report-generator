@@ -1,7 +1,9 @@
 // components/LeaseForm.tsx
 import React, { useState, useEffect } from 'react';
-import { Lease, PropertyLease, MotorVehicleLease } from '../types/Lease';
+import { Lease, PropertyLease, MotorVehicleLease, Branch } from '../types/Lease';
 import './LeaseForm.css';
+
+const BRANCH_OPTIONS: Branch[] = ['PERT', 'MACK', 'MTIS', 'MUSW', 'NEWM', 'ADEL', 'BLAC', 'CORP', 'PERT-RTS', 'MACK-RTS', 'ADEL-RTS', 'PARK'];
 
 interface LeaseFormProps {
   lease: Lease;
@@ -90,6 +92,21 @@ const LeaseForm: React.FC<LeaseFormProps> = ({
             </div>
 
             <div className="form-group">
+              <label>Branch *</label>
+              {errors.branch && <span className="error-text">This field is required</span>}
+              <select
+                className={errors.branch ? 'error' : ''}
+                value={lease.branch}
+                onChange={(e) => onInputChange('branch', e.target.value)}
+              >
+                <option value="">Select branch...</option>
+                {BRANCH_OPTIONS.map((branch) => (
+                  <option key={branch} value={branch}>{branch}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
               <label>Commencement Date *</label>
               {errors.commencementDate && <span className="error-text">This field is required</span>}
               <input
@@ -139,6 +156,21 @@ const LeaseForm: React.FC<LeaseFormProps> = ({
                 onChange={(e) => onInputChange('description', e.target.value)}
                 placeholder="Enter description"
               />
+            </div>
+
+            <div className="form-group">
+              <label>Branch *</label>
+              {errors.branch && <span className="error-text">This field is required</span>}
+              <select
+                className={errors.branch ? 'error' : ''}
+                value={lease.branch}
+                onChange={(e) => onInputChange('branch', e.target.value)}
+              >
+                <option value="">Select branch...</option>
+                {BRANCH_OPTIONS.map((branch) => (
+                  <option key={branch} value={branch}>{branch}</option>
+                ))}
+              </select>
             </div>
 
             <div className="form-group">

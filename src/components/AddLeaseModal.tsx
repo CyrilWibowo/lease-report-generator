@@ -80,6 +80,7 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
         type: 'Property',
         entity: '',
         lessor: '',
+        branch: '',
         propertyAddress: '',
         commencementDate: '',
         expiryDate: '',
@@ -99,6 +100,7 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
         type: 'Motor Vehicle',
         entity: '',
         lessor: '',
+        branch: '',
         description: '',
         vinSerialNo: '',
         regoNo: '',
@@ -157,6 +159,10 @@ const AddLeaseModal: React.FC<AddLeaseModalProps> = ({ onClose, onSave }) => {
     }
     if (!lease.lessor?.trim()) {
       newErrors.lessor = true;
+      isValid = false;
+    }
+    if (!lease.branch?.trim()) {
+      newErrors.branch = true;
       isValid = false;
     }
     if (!lease.annualRent.trim()) {

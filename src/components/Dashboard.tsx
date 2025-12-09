@@ -144,6 +144,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           <td>{lease ? lease.entity : ''}</td>
           <td>{lease ? lease.lessor : ''}</td>
           <td>{lease ? lease.propertyAddress : ''}</td>
+          <td>{lease ? lease.branch : ''}</td>
           <td>{lease ? formatDate(lease.commencementDate) : ''}</td>
           <td style={{ color: lease && isLeaseExpired(lease) ? '#dc3545' : '#212529' }}>
             {lease ? formatDate(lease.expiryDate) : ''}
@@ -209,6 +210,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           <td>{lease ? lease.lessor : ''}</td>
           <td>{lease ? lease.regoNo : ''}</td>
           <td>{lease ? lease.description : ''}</td>
+          <td>{lease ? lease.branch : ''}</td>
           <td>{lease ? lease.vehicleType : ''}</td>
           <td>{lease ? lease.engineNumber : ''}</td>
           <td>{lease ? lease.vinSerialNo : ''}</td>
@@ -350,6 +352,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <th onClick={() => handleSort('propertyAddress', true)} style={{ cursor: 'pointer' }}>
                   Property Address{renderSortIndicator('propertyAddress', true)}
                 </th>
+                <th onClick={() => handleSort('branch', true)} style={{ cursor: 'pointer' }}>
+                  Branch{renderSortIndicator('branch', true)}
+                </th>
                 <th onClick={() => handleSort('commencementDate', true)} style={{ cursor: 'pointer' }}>
                   Commencement Date{renderSortIndicator('commencementDate', true)}
                 </th>
@@ -395,6 +400,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </th>
                 <th onClick={() => handleSort('description', false)} style={{ cursor: 'pointer' }}>
                   Description{renderSortIndicator('description', false)}
+                </th>
+                <th onClick={() => handleSort('branch', false)} style={{ cursor: 'pointer' }}>
+                  Branch{renderSortIndicator('branch', false)}
                 </th>
                 <th onClick={() => handleSort('vehicleType', false)} style={{ cursor: 'pointer' }}>
                   Vehicle Type{renderSortIndicator('vehicleType', false)}
