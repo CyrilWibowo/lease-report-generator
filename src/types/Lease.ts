@@ -12,11 +12,14 @@ export interface OpeningBalance {
   rentExpense: number;
 }
 
+export type Branch = 'PERT' | 'MACK' | 'MTIS' | 'MUSW' | 'NEWM' | 'ADEL' | 'BLAC' | 'CORP' | 'PERT-RTS' | 'MACK-RTS' | 'ADEL-RTS' | 'PARK' | '';
+
 export interface BaseLease {
   id: string;
   leaseId: string;
   entity: string;
   lessor: string;
+  branch: Branch;
   borrowingRate: string;
   incrementMethods: { [year: number]: string };
   overrideAmounts: { [year: number]: string };
