@@ -191,8 +191,8 @@ const OpeningBalanceManager: React.FC<OpeningBalanceManagerProps> = ({
   const identifierLabel = type === 'Property' ? 'Property Address' : 'Rego No';
 
   return (
-    <div className="ob-manager-overlay" onClick={onClose}>
-      <div className="ob-manager-content" onClick={(e) => e.stopPropagation()}>
+    <div className="ob-manager-overlay" onMouseDown={onClose}>
+      <div className="ob-manager-content" onMouseDown={(e) => e.stopPropagation()}>
         <div className="ob-manager-header">
           <h2 className="ob-manager-title">{title}</h2>
           <button className="ob-manager-close-button" onClick={onClose}>

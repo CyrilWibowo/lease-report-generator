@@ -154,8 +154,8 @@ const ToXLSXModal: React.FC<ToXLSXModalProps> = ({ onClose, onGenerate, openingB
   };
 
   return (
-    <div className="xlsx-modal-overlay" onClick={onClose}>
-      <div className="xlsx-modal-content" onClick={(e) => e.stopPropagation()}>
+    <div className="xlsx-modal-overlay" onMouseDown={onClose}>
+      <div className="xlsx-modal-content" onMouseDown={(e) => e.stopPropagation()}>
         <div className="xlsx-modal-header">
           <h2 className="xlsx-modal-title">Excel Generation Settings</h2>
           <button className="xlsx-close-button" onClick={onClose}>

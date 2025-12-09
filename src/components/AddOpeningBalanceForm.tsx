@@ -98,8 +98,8 @@ const AddOpeningBalanceForm: React.FC<AddOpeningBalanceFormProps> = ({
   };
 
   return (
-    <div className="add-ob-overlay" onClick={onClose}>
-      <div className="add-ob-content" onClick={(e) => e.stopPropagation()}>
+    <div className="add-ob-overlay" onMouseDown={onClose}>
+      <div className="add-ob-content" onMouseDown={(e) => e.stopPropagation()}>
         <div className="add-ob-header">
           <h2 className="add-ob-title">Add Opening Balance</h2>
           <button className="add-ob-close-button" onClick={onClose}>

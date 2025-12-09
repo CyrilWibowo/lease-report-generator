@@ -114,8 +114,8 @@ const ReportModal: React.FC<ReportModalProps> = ({
   };
 
   return (
-    <div className="report-modal-overlay" onClick={onClose}>
-      <div className="report-modal-content" onClick={(e) => e.stopPropagation()}>
+    <div className="report-modal-overlay" onMouseDown={onClose}>
+      <div className="report-modal-content" onMouseDown={(e) => e.stopPropagation()}>
         <div className="report-modal-header">
           <h2 className="report-modal-title">Generate Report</h2>
           <button className="report-close-button" onClick={onClose}>

@@ -43,8 +43,8 @@ const OpeningBalanceModal: React.FC<OpeningBalanceModalProps> = ({
   );
 
   return (
-    <div className="opening-balance-overlay" onClick={onClose}>
-      <div className="opening-balance-content" onClick={(e) => e.stopPropagation()}>
+    <div className="opening-balance-overlay" onMouseDown={onClose}>
+      <div className="opening-balance-content" onMouseDown={(e) => e.stopPropagation()}>
         <div className="opening-balance-header">
           <h2 className="opening-balance-title">Manage Opening Balance</h2>
           <button className="opening-balance-close-button" onClick={onClose}>

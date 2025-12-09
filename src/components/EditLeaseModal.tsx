@@ -247,8 +247,8 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
 
   return (
     <>
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-overlay" onMouseDown={onClose}>
+        <div className="modal-content" onMouseDown={(e) => e.stopPropagation()}>
           <div className="modal-header">
             <h2 className="modal-title">Edit {editedLease.type} Lease</h2>
             <button className="close-button" onClick={onClose}>
@@ -565,8 +565,8 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
       </div>
 
       {showDeleteConfirm && (
-        <div className="confirm-overlay" onClick={() => setShowDeleteConfirm(false)}>
-          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+        <div className="confirm-overlay" onMouseDown={() => setShowDeleteConfirm(false)}>
+          <div className="confirm-dialog" onMouseDown={(e) => e.stopPropagation()}>
             <h3 className="confirm-title">Delete Lease?</h3>
             <p className="confirm-text">
               Are you sure you want to delete this lease? This action cannot be undone.
@@ -584,8 +584,8 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
       )}
 
       {showCopyConfirm && (
-        <div className="confirm-overlay" onClick={() => setShowCopyConfirm(false)}>
-          <div className="confirm-dialog" onClick={(e) => e.stopPropagation()}>
+        <div className="confirm-overlay" onMouseDown={() => setShowCopyConfirm(false)}>
+          <div className="confirm-dialog" onMouseDown={(e) => e.stopPropagation()}>
             <h3 className="confirm-title">Copy Lease?</h3>
             <p className="confirm-text">
               This will create a duplicate of this lease with all the same details. Continue?
