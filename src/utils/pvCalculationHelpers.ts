@@ -572,6 +572,7 @@ export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (stri
   // Row 0: Header row
   rows.push([
     '',
+    '',
     `Opening Balance 31/12/${lastYear}`,
     `Movement FY ${thisYear}`,
     `Closing Balance ${closingDateStr}`
@@ -579,7 +580,8 @@ export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (stri
 
   // Row 1: 16400 Right to Use the Assets
   rows.push([
-    '16400 Right to Use the Assets',
+    '16400',
+    'Right to Use the Assets',
     openingBalances.rightToUseAssets,
     rightToUseAssetsMovement,
     openingBalances.rightToUseAssets + rightToUseAssetsMovement
@@ -588,7 +590,8 @@ export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (stri
   // Row 2: 16405 Acc.Depr. Right to Use the Assets
   // Movement = journal row 13 value
   rows.push([
-    '16405 Acc.Depr. Right to Use the Assets',
+    '16405',
+    'Acc.Depr. Right to Use the Assets',
     openingBalances.accDeprRightToUseAssets,
     -journalRow13Value,
     openingBalances.accDeprRightToUseAssets - journalRow13Value
@@ -598,7 +601,8 @@ export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (stri
   // Movement = journal row 10 value
   const row3Movement = isExtension ? journalRow10Value + journalRow4Value : journalRow10Value;
   rows.push([
-    '22005 Lease Liability - Current',
+    '22005',
+    'Lease Liability - Current',
     openingBalances.leaseLiabilityCurrent,
     row3Movement,
     openingBalances.leaseLiabilityCurrent + row3Movement
@@ -608,7 +612,8 @@ export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (stri
   // Movement = journal row 9 value
   const row4Movement = isExtension ? journalRow9Value + journalRow5Value : journalRow9Value;
   rows.push([
-    '22010 Lease Liability - Non Current',
+    '22010',
+    'Lease Liability - Non Current',
     openingBalances.leaseLiabilityNonCurrent,
     row4Movement,
     openingBalances.leaseLiabilityNonCurrent + row4Movement
@@ -617,7 +622,8 @@ export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (stri
   // Row 5: 60080 Depreciation Expense
   // Movement = journal row 11 value
   rows.push([
-    '60080 Depreciation Expense',
+    '60080',
+    'Depreciation Expense',
     openingBalances.depreciationExpense,
     -journalRow11Value,
     openingBalances.depreciationExpense - journalRow11Value
@@ -626,7 +632,8 @@ export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (stri
   // Row 6: 60275 Interest Expense Rent
   // Movement = journal row 12 value
   rows.push([
-    '60275 Interest Expense Rent',
+    '60275',
+    'Interest Expense Rent',
     openingBalances.interestExpenseRent,
     journalRow12Value,
     openingBalances.interestExpenseRent + journalRow12Value
@@ -644,7 +651,8 @@ export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (stri
   // Row 7: 60270 Rent Expense
   // Movement = -(sum of opening balances column)
   rows.push([
-    '60270 Rent Expense',
+    '60270',
+    'Rent Expense',
     openingBalances.rentExpense,
     rentExpenseMovement,
     openingBalances.rentExpense + rentExpenseMovement
