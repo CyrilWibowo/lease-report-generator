@@ -8,7 +8,7 @@ export const generateExcelFromLeases = (lease: PropertyLease, params: XLSXGenera
   const workbook = XLSX.utils.book_new();
 
   XLSX.utils.book_append_sheet(workbook, generateLeasePayments(lease), "Lease Payements");
-  XLSX.utils.book_append_sheet(workbook, generatePVCalculation(lease, params), "PV Calculation");
+  XLSX.utils.book_append_sheet(workbook, generatePVCalculation(lease, params, true), "PV Calculation");
 
   XLSX.writeFile(workbook, `${lease.propertyAddress}.xlsx`);
 };

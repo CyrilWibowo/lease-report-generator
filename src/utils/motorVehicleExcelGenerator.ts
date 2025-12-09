@@ -108,7 +108,7 @@ export const generateMotorVehiclePVCalculation = (lease: MotorVehicleLease, para
   };
 
   // Generate the standard PV calculation worksheet
-  const worksheet = generatePVCalculation(tempLease, params);
+  const worksheet = generatePVCalculation(tempLease, params, false);
 
   return worksheet;
 };

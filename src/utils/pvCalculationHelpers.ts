@@ -515,7 +515,7 @@ export interface BalanceSummaryParams {
  * - Row 6: 60275 Interest Expense Rent
  * - Row 7: 60270 Rent Expense
  */
-export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (string | number)[][] => {
+export const generateBalanceSummaryTable = (params: BalanceSummaryParams, isPropertyLease: boolean): (string | number)[][] => {
   const {
     presentValue,
     openingDate,
@@ -651,8 +651,8 @@ export const generateBalanceSummaryTable = (params: BalanceSummaryParams): (stri
   // Row 7: 60270 Rent Expense
   // Movement = -(sum of opening balances column)
   rows.push([
-    '60270',
-    'Rent Expense',
+    isPropertyLease ? '60270' : '60390',
+    isPropertyLease ? 'Rent Expense' : 'Vehicle Expense',
     openingBalances.rentExpense,
     rentExpenseMovement,
     openingBalances.rentExpense + rentExpenseMovement

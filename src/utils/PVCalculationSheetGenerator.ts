@@ -17,7 +17,7 @@ import {
 } from './pvCalculationHelpers';
 import { formatPVWorksheet } from './pvWorksheetFormatter';
 
-export const generatePVCalculation = (lease: PropertyLease, params: XLSXGenerationParams): XLSX.WorkSheet => {
+export const generatePVCalculation = (lease: PropertyLease, params: XLSXGenerationParams, isPropertyLease: boolean): XLSX.WorkSheet => {
   // Get all payment rows from the lease payments logic
   const allPaymentRows = generatePaymentRows(lease);
 
@@ -266,7 +266,9 @@ export const generatePVCalculation = (lease: PropertyLease, params: XLSXGenerati
     },
     journalRows,
     isExtension: params.isExtension
-  });
+    },
+    isPropertyLease
+  );
 
   // Add empty row before balance summary table
   data.push([]);
