@@ -457,6 +457,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         <ToXLSXModal
           onClose={() => setXlsxModalLease(null)}
           onGenerate={(params) => handleGenerateExcel(xlsxModalLease, params)}
+          openingBalances={xlsxModalLease.openingBalances}
         />
       )}
     </div>
