@@ -129,3 +129,27 @@
 .opening-balance-cancel-button:hover {
   background-color: #5a6268;
 }
+
+.opening-balance-empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.opening-balance-delete-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.opening-balance-delete-button:hover {
+  background-color: #c82333;
+}
