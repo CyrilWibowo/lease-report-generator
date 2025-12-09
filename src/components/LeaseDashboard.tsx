@@ -58,7 +58,6 @@ const LeaseDashboard: React.FC<LeaseDashboardProps> = ({ onBack }) => {
           </button>
           <div className="header-logos">
             <img src={cwTechnicaLogo} alt="C&W Technica Logo" className="header-logo" />
-            <img src={rimexLogo} alt="Rimex Logo" className="header-logo" />
           </div>
         </div>
         <div className="header-buttons">
