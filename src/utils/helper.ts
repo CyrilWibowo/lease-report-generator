@@ -1,6 +1,6 @@
 export const formatCurrency = (amount: string): string => {
   const num = parseFloat(amount);
-  return `$${num.toLocaleString('en-US')}`;
+  return `$${num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;;
 }
 
 export const formatCurrency2 = (amount: number): string => {
