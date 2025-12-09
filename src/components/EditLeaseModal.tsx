@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import { Lease, PropertyLease, MotorVehicleLease } from '../types/Lease';
+import { Lease, PropertyLease, MotorVehicleLease, OpeningBalance } from '../types/Lease';
 import { generateLeaseId } from '../utils/helper';
 import OpeningBalanceModal from './OpeningBalanceModal';
 import './EditLeaseModal.css';
@@ -218,6 +218,16 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
     onCopy(copiedLease);
     setShowCopyConfirm(false);
     onClose();
+  };
+
+  const handleAddOpeningBalance = (openingBalance: OpeningBalance) => {
+    const updatedBalances = [...(editedLease.openingBalances || []), openingBalance];
+    setEditedLease({ ...editedLease, openingBalances: updatedBalances } as Lease);
+  };
+
+  const handleDeleteOpeningBalance = (id: string) => {
+    const updatedBalances = (editedLease.openingBalances || []).filter((ob) => ob.id !== id);
+    setEditedLease({ ...editedLease, openingBalances: updatedBalances } as Lease);
   };
 
   const isPropertyLease = editedLease.type === 'Property';
@@ -573,7 +583,12 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
       )}
 
       {showOpeningBalance && (
-        <OpeningBalanceModal onClose={() => setShowOpeningBalance(false)} />
+        <OpeningBalanceModal
+          openingBalances={editedLease.openingBalances || []}
+          onAdd={handleAddOpeningBalance}
+          onDelete={handleDeleteOpeningBalance}
+          onClose={() => setShowOpeningBalance(false)}
+        />
       )}
     </>
   );
