@@ -1,4 +1,17 @@
 // types/Lease.ts
+export interface OpeningBalance {
+  id: string;
+  openingDate: string;
+  isNewLeaseExtension: boolean;
+  rightToUseAssets: number;
+  accDeprRightToUseAssets: number;
+  leaseLiabilityCurrent: number;
+  leaseLiabilityNonCurrent: number;
+  depreciationExpense: number;
+  interestExpenseRent: number;
+  rentExpense: number;
+}
+
 export interface BaseLease {
   id: string;
   leaseId: string;
@@ -7,6 +20,7 @@ export interface BaseLease {
   borrowingRate: string;
   incrementMethods: { [year: number]: string };
   overrideAmounts: { [year: number]: string };
+  openingBalances: OpeningBalance[];
 }
 
 export interface PropertyLease extends BaseLease {
