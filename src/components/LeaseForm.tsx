@@ -1,5 +1,5 @@
 // components/LeaseForm.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Lease, PropertyLease, MotorVehicleLease } from '../types/Lease';
 import './LeaseForm.css';
 
@@ -27,6 +27,21 @@ const LeaseForm: React.FC<LeaseFormProps> = ({
   onClose
 }) => {
   const isPropertyLease = lease.type === 'Property';
+
+  // Local state for monthly rent to allow typing without immediate formatting
+  const [monthlyRentInput, setMonthlyRentInput] = useState(() => {
+    return lease.annualRent ? (parseFloat(lease.annualRent) / 12).toFixed(2) : '';
+  });
+
+  // Sync local state when lease.annualRent changes externally
+  useEffect(() => {
+    const calculatedMonthly = lease.annualRent ? (parseFloat(lease.annualRent) / 12).toFixed(2) : '';
+    // Only update if the values are meaningfully different (to avoid cursor jump during typing)
+    if (Math.abs(parseFloat(calculatedMonthly || '0') - parseFloat(monthlyRentInput || '0')) > 0.001 ||
+        (!lease.annualRent && monthlyRentInput)) {
+      setMonthlyRentInput(calculatedMonthly);
+    }
+  }, [lease.annualRent]);
 
   return (
     <div className="lease-form-modal">
@@ -208,11 +223,18 @@ const LeaseForm: React.FC<LeaseFormProps> = ({
           <input
             type="number"
             className={errors.annualRent ? 'error' : ''}
-            value={lease.annualRent ? (parseFloat(lease.annualRent) / 12).toFixed(2) : ''}
+            value={monthlyRentInput}
             onChange={(e) => {
               const monthlyValue = e.target.value;
+              setMonthlyRentInput(monthlyValue);
               const annualValue = monthlyValue ? (parseFloat(monthlyValue) * 12).toString() : '';
               onInputChange('annualRent', annualValue);
+            }}
+            onBlur={() => {
+              // Format to 2 decimal places on blur
+              if (monthlyRentInput) {
+                setMonthlyRentInput(parseFloat(monthlyRentInput).toFixed(2));
+              }
             }}
             placeholder="0.00"
             step="0.01"

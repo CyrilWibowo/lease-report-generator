@@ -24,9 +24,24 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
   const [showCopyConfirm, setShowCopyConfirm] = useState(false);
   const [showOpeningBalance, setShowOpeningBalance] = useState(false);
 
+  // Local state for monthly rent to allow typing without immediate formatting
+  const [monthlyRentInput, setMonthlyRentInput] = useState(() => {
+    return lease.annualRent ? (parseFloat(lease.annualRent) / 12).toFixed(2) : '';
+  });
+
   useEffect(() => {
     calculateCommittedYears();
   }, [editedLease]);
+
+  // Sync monthly rent input when editedLease.annualRent changes externally
+  useEffect(() => {
+    const calculatedMonthly = editedLease.annualRent ? (parseFloat(editedLease.annualRent) / 12).toFixed(2) : '';
+    // Only update if values are meaningfully different (to avoid cursor jump during typing)
+    if (Math.abs(parseFloat(calculatedMonthly || '0') - parseFloat(monthlyRentInput || '0')) > 0.001 ||
+        (!editedLease.annualRent && monthlyRentInput)) {
+      setMonthlyRentInput(calculatedMonthly);
+    }
+  }, [editedLease.annualRent]);
 
   const calculateCommittedYears = () => {
     if (editedLease.type === 'Property') {
@@ -417,11 +432,18 @@ const EditLeaseModal: React.FC<EditLeaseModalProps> = ({ lease, onClose, onSave,
               <input
                 type="number"
                 className={errors.annualRent ? 'form-input-error' : 'form-input'}
-                value={editedLease.annualRent ? (parseFloat(editedLease.annualRent) / 12).toFixed(2) : ''}
+                value={monthlyRentInput}
                 onChange={(e) => {
                   const monthlyValue = e.target.value;
+                  setMonthlyRentInput(monthlyValue);
                   const annualValue = monthlyValue ? (parseFloat(monthlyValue) * 12).toString() : '';
                   handleInputChange('annualRent', annualValue);
+                }}
+                onBlur={() => {
+                  // Format to 2 decimal places on blur
+                  if (monthlyRentInput) {
+                    setMonthlyRentInput(parseFloat(monthlyRentInput).toFixed(2));
+                  }
                 }}
                 placeholder="0.00"
                 step="0.01"
