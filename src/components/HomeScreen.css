@@ -47,7 +47,7 @@
 }
 
 .tool-button {
-  background-color: #007bff;
+  background-color: #666;
   color: white;
   border: none;
   padding: 24px 16px;
@@ -61,7 +61,7 @@
 }
 
 .tool-button:hover:not(:disabled) {
-  background-color: #0056b3;
+  background-color: #3a3a3a;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
