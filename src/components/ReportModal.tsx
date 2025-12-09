@@ -159,6 +159,7 @@ const ReportModal: React.FC<ReportModalProps> = ({
           motorVehicleLeases={motorVehicleLeases}
           onClose={() => setOpeningBalanceManagerType(null)}
           onSave={onUpdateLeases}
+          openingDate={params.leaseLiabilityOpening}
         />
       )}
     </div>
