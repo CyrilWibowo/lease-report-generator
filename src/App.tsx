@@ -5,6 +5,7 @@ import Dashboard from './components/Dashboard';
 import AddLeaseModal from './components/AddLeaseModal';
 import { loadLeases, addLease, updateLease, deleteLease } from './utils/dataStorage';
 import rimexLogo from './assets/rimexLogo.png';
+import cwTechnicaLogo from './assets/C&WTechnicaLogo.png';
 import './App.css';
 
 function App() {
@@ -46,7 +47,10 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <img src={rimexLogo} alt="Rimex Logo" className="header-logo" />
+        <div className="header-logos">
+          <img src={cwTechnicaLogo} alt="C&W Technica Logo" className="header-logo" />
+          <img src={rimexLogo} alt="Rimex Logo" className="header-logo" />
+        </div>
         <button className="add-card-button" onClick={() => setIsModalOpen(true)}>
           Add Card
         </button>
